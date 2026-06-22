@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 
@@ -39,6 +40,12 @@ export default async function DashboardPage() {
               {profile?.role ?? 'learner'}
             </span>
           </p>
+          <Link
+            href="/videos"
+            className="block w-fit text-sm font-medium text-foreground underline"
+          >
+            Browse video lessons
+          </Link>
           <LogoutButton />
         </CardContent>
       </Card>
