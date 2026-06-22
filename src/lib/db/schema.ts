@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  text,
+  integer,
+  boolean,
+  timestamp,
+  index,
+  unique,
+} from 'drizzle-orm/pg-core'
 import { createId } from '@paralleldrive/cuid2'
 
 // Better Auth manages its own tables (user / session / account / verification).
@@ -22,3 +30,66 @@ export const userProfiles = pgTable('user_profiles', {
     .defaultNow()
     .notNull(),
 })
+
+// ─── Videos ─────────────────────────────────────────────────────────────────
+
+export const lessonGroups = pgTable('lesson_groups', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(), // "文法", "漢字", etc.
+  sortOrder: integer('sort_order').notNull().default(0),
+  isPublished: boolean('is_published').notNull().default(false),
+})
+
+export const videoLessons = pgTable(
+  'video_lessons',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    lessonGroupId: text('lesson_group_id')
+      .notNull()
+      .references(() => lessonGroups.id),
+    title: text('title').notNull(),
+    description: text('description'),
+    embedUrl: text('embed_url'), // returned from server; raw Drive URL not exposed
+    durationSeconds: integer('duration_seconds'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    isPublished: boolean('is_published').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index('idx_video_group').on(t.lessonGroupId, t.sortOrder)],
+)
+
+// ─── Progress ───────────────────────────────────────────────────────────────
+// One shared table across target types. Video lessons use the subset
+// `unseen | in_progress | completed`; `unseen` is the shared default.
+
+export const studyProgress = pgTable(
+  'study_progress',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text('user_id').notNull(),
+    targetType: text('target_type', {
+      enum: ['kanji', 'vocabulary', 'grammar', 'video_lesson'],
+    }).notNull(),
+    targetId: text('target_id').notNull(),
+    progressState: text('progress_state', {
+      enum: ['unseen', 'in_progress', 'reviewing', 'mastered', 'completed'],
+    })
+      .notNull()
+      .default('unseen'),
+    lastViewedAt: timestamp('last_viewed_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (t) => [
+    unique('uq_progress').on(t.userId, t.targetType, t.targetId),
+    index('idx_progress_user').on(t.userId, t.targetType),
+  ],
+)
