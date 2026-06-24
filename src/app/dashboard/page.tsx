@@ -58,6 +58,12 @@ export default async function DashboardPage() {
           >
             Browse vocabulary
           </Link>
+          <Link
+            href="/grammar"
+            className="block w-fit text-sm font-medium text-foreground underline"
+          >
+            Browse grammar
+          </Link>
           <LogoutButton />
         </CardContent>
       </Card>
