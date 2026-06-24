@@ -112,3 +112,25 @@ export const vocabularyListQuerySchema = z.object({
 })
 
 export type VocabularyListQuery = z.infer<typeof vocabularyListQuerySchema>
+
+// ─── Grammar ──────────────────────────────────────────────────────────────────
+
+// The JLPT level set (SPEC §9). Drives the grammar filter dropdown's accepted
+// values; the actual options offered are derived from the data (see
+// grammar.service `getJlptLevelOptions`) so the UI never offers an empty level.
+export const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'] as const
+
+export type JlptLevel = (typeof JLPT_LEVELS)[number]
+
+// `q` matches across pattern / meaning (server-side ILIKE). `jlptLevel` is an
+// optional exact filter. `page` / `pageSize` drive server-side pagination;
+// coerced from string query params and bounded so a response can never request
+// an unbounded page.
+export const grammarListQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  jlptLevel: z.enum(JLPT_LEVELS).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(24),
+})
+
+export type GrammarListQuery = z.infer<typeof grammarListQuerySchema>

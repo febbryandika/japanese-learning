@@ -14,6 +14,7 @@
     "db:seed:videos": "tsx scripts/seed-videos.ts",
     "db:seed:kanji": "tsx scripts/seed-kanji.ts",
     "db:seed:vocabulary": "tsx scripts/seed-vocabulary.ts",
+    "db:seed:grammar": "tsx scripts/seed-grammar.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

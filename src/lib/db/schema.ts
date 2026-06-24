@@ -113,6 +113,45 @@ export const vocabularyItems = pgTable(
   ],
 )
 
+// ─── Grammar ──────────────────────────────────────────────────────────────────
+
+export const grammarItems = pgTable(
+  'grammar_items',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    pattern: text('pattern').notNull(), // e.g. "〜ばかりか"
+    meaning: text('meaning').notNull(),
+    formation: text('formation'),
+    usageNotes: text('usage_notes'),
+    commonMistakes: text('common_mistakes'),
+    jlptLevel: text('jlpt_level').notNull().default('N2'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index('idx_grammar_pattern').on(t.pattern)],
+)
+
+// Curated example sentences, one-to-many under a grammar item. Ordered by
+// `orderIndex` when rendered. Cascades on grammar deletion.
+export const grammarExamples = pgTable(
+  'grammar_examples',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    grammarId: text('grammar_id')
+      .notNull()
+      .references(() => grammarItems.id, { onDelete: 'cascade' }),
+    sentenceJa: text('sentence_ja').notNull(),
+    sentenceEn: text('sentence_en').notNull(),
+    orderIndex: integer('order_index').notNull().default(0),
+  },
+  (t) => [index('idx_grammar_examples_grammar_id').on(t.grammarId)],
+)
+
 // ─── Progress ───────────────────────────────────────────────────────────────
 // One shared table across target types. Video lessons use the subset
 // `unseen | in_progress | completed`; `unseen` is the shared default.
