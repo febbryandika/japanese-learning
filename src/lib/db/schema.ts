@@ -65,6 +65,28 @@ export const videoLessons = pgTable(
   (t) => [index('idx_video_group').on(t.lessonGroupId, t.sortOrder)],
 )
 
+// ─── Kanji ──────────────────────────────────────────────────────────────────
+
+export const kanjiItems = pgTable(
+  'kanji_items',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    character: text('character').notNull().unique(), // e.g. "読"
+    onyomi: text('onyomi'), // e.g. "ドク・トク"
+    kunyomi: text('kunyomi'), // e.g. "よ.む" (null if none)
+    meaning: text('meaning').notNull(),
+    strokeCount: integer('stroke_count'),
+    jlptLevel: text('jlpt_level').notNull().default('N2'),
+    notes: text('notes'), // JSON: [{word, reading, meaning}] compound list
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index('idx_kanji_character').on(t.character)],
+)
+
 // ─── Progress ───────────────────────────────────────────────────────────────
 // One shared table across target types. Video lessons use the subset
 // `unseen | in_progress | completed`; `unseen` is the shared default.

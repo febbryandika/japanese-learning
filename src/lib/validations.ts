@@ -40,3 +40,30 @@ export type ProgressState =
   | 'reviewing'
   | 'mastered'
   | 'completed'
+
+// ─── Kanji ────────────────────────────────────────────────────────────────────
+
+// `q` matches across character / onyomi / kunyomi / meaning (server-side ILIKE).
+// `strokeCount` is an optional exact filter. `page` / `pageSize` drive
+// server-side pagination; coerced from string query params and bounded so a
+// response can never request an unbounded page.
+export const kanjiListQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  strokeCount: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(24),
+})
+
+export type KanjiListQuery = z.infer<typeof kanjiListQuerySchema>
+
+// `kanji_items.notes` holds a JSON-stringified array of compound words. Parsed
+// defensively (see kanji.service) so malformed data degrades to an empty list.
+export const kanjiCompoundSchema = z.array(
+  z.object({
+    word: z.string(),
+    reading: z.string(),
+    meaning: z.string(),
+  }),
+)
+
+export type KanjiCompound = z.infer<typeof kanjiCompoundSchema>[number]

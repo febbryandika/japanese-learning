@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed:videos": "tsx scripts/seed-videos.ts",
+    "db:seed:kanji": "tsx scripts/seed-kanji.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
