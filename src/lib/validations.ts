@@ -196,3 +196,28 @@ export const progressListQuerySchema = z.object({
 })
 
 export type ProgressListQuery = z.infer<typeof progressListQuerySchema>
+
+// ─── Dashboard ──────────────────────────────────────────────────────────────
+
+// Per-resource progress for the dashboard summary cards. `percentage` is the
+// rounded `mastered / total` (0–100). The dashboard service validates each
+// computed stat against this before returning (GET /api/dashboard).
+export const dashboardProgressStatSchema = z.object({
+  mastered: z.number().int().min(0),
+  total: z.number().int().min(0),
+  percentage: z.number().int().min(0).max(100),
+})
+
+export type DashboardProgressStat = z.infer<typeof dashboardProgressStatSchema>
+
+// A lowest-scoring exam section for the Weak Areas card. Always empty until the
+// Phase 3 mock-exam module exists; the schema is here so the computation can
+// drop in without a contract change.
+export const dashboardWeakAreaSchema = z.object({
+  sectionName: z.string(),
+  correct: z.number().int().min(0),
+  total: z.number().int().min(0),
+  percentage: z.number().int().min(0).max(100),
+})
+
+export type DashboardWeakArea = z.infer<typeof dashboardWeakAreaSchema>
