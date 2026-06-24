@@ -15,6 +15,13 @@
       "when": 1782101586239,
       "tag": "0001_spicy_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782106120243,
+      "tag": "0002_milky_argent",
+      "breakpoints": true
     }
   ]
 }
