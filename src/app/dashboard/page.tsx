@@ -70,6 +70,12 @@ export default async function DashboardPage() {
           >
             View bookmarks
           </Link>
+          <Link
+            href="/progress"
+            className="block w-fit text-sm font-medium text-foreground underline"
+          >
+            View progress
+          </Link>
           <LogoutButton />
         </CardContent>
       </Card>

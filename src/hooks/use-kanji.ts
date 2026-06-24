@@ -3,12 +3,15 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import type { KanjiDetail, KanjiListItem } from '@/services/kanji.service'
-import type { KanjiCompound } from '@/lib/validations'
+import type { KanjiCompound, ProgressState } from '@/lib/validations'
 
 export type { KanjiCompound, KanjiDetail, KanjiListItem }
 
-// The detail route augments the kanji with the caller's bookmark state.
-export type KanjiDetailResponse = KanjiDetail & { isBookmarked: boolean }
+// The detail route augments the kanji with the caller's bookmark and progress state.
+export type KanjiDetailResponse = KanjiDetail & {
+  isBookmarked: boolean
+  progressState: ProgressState
+}
 
 export type KanjiListResponse = {
   data: KanjiListItem[]

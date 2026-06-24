@@ -2,13 +2,20 @@
 
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { useVocabularyDetail } from '@/hooks/use-vocabulary'
+import { useUpdateProgress } from '@/hooks/use-progress'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { VOCAB_POS_LABELS, type VocabPartOfSpeech } from '@/lib/validations'
+import {
+  STUDY_PROGRESS_STATES,
+  VOCAB_POS_LABELS,
+  type VocabPartOfSpeech,
+} from '@/lib/validations'
 
 function posLabel(partOfSpeech: string | null): string | null {
   if (!partOfSpeech) return null
@@ -17,6 +24,7 @@ function posLabel(partOfSpeech: string | null): string | null {
 
 export function VocabularyDetailView({ id }: { id: string }) {
   const { data: vocab, isPending, isError, refetch } = useVocabularyDetail(id)
+  const updateProgress = useUpdateProgress()
 
   if (isPending) {
     return <DetailSkeleton />
@@ -49,11 +57,29 @@ export function VocabularyDetailView({ id }: { id: string }) {
           {label ? (
             <span className="text-sm text-muted-foreground">{label}</span>
           ) : null}
-          <BookmarkButton
-            targetType="vocabulary"
-            targetId={vocab.id}
-            className="ml-auto"
-          />
+          <div className="ml-auto flex items-center gap-2">
+            <ProgressSelector
+              value={vocab.progressState}
+              options={STUDY_PROGRESS_STATES}
+              disabled={updateProgress.isPending}
+              onChange={(progressState) =>
+                updateProgress.mutate(
+                  {
+                    targetType: 'vocabulary',
+                    targetId: vocab.id,
+                    progressState,
+                  },
+                  {
+                    onError: () =>
+                      toast.error(
+                        'Could not update progress. Please try again.',
+                      ),
+                  },
+                )
+              }
+            />
+            <BookmarkButton targetType="vocabulary" targetId={vocab.id} />
+          </div>
         </div>
         <h1 className="text-4xl leading-none font-semibold" lang="ja">
           {vocab.word}

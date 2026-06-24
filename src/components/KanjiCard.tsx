@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { ProgressBadge } from '@/components/ProgressBadge'
 import type { KanjiListItem } from '@/hooks/use-kanji'
 
 export function KanjiCard({ kanji }: { kanji: KanjiListItem }) {
@@ -39,6 +40,9 @@ export function KanjiCard({ kanji }: { kanji: KanjiListItem }) {
                   ? `${kanji.strokeCount} strokes`
                   : '— strokes'}
               </span>
+              {kanji.progressState ? (
+                <ProgressBadge state={kanji.progressState} />
+              ) : null}
             </div>
           </div>
         </CardContent>

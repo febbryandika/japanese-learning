@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { ProgressBadge } from '@/components/ProgressBadge'
 import { VOCAB_POS_LABELS, type VocabPartOfSpeech } from '@/lib/validations'
 import type { VocabularyListItem } from '@/hooks/use-vocabulary'
 
@@ -28,6 +29,9 @@ export function VocabularyCard({ vocab }: { vocab: VocabularyListItem }) {
             <Badge variant="secondary">{vocab.jlptLevel}</Badge>
             {label ? (
               <span className="text-xs text-muted-foreground">{label}</span>
+            ) : null}
+            {vocab.progressState ? (
+              <ProgressBadge state={vocab.progressState} />
             ) : null}
           </div>
         </CardContent>

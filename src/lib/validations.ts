@@ -20,9 +20,12 @@ export type RegisterInput = z.infer<typeof registerSchema>
 // ─── Videos ─────────────────────────────────────────────────────────────────
 
 // Video lessons use the subset of the shared progress_state enum. `unseen` is
-// the "not started" state (the DB has no `not_started` value).
+// the "not started" state (the DB has no `not_started` value). The array drives
+// both the PATCH schema and the video ProgressSelector options.
+export const VIDEO_PROGRESS_STATES = ['unseen', 'in_progress', 'completed'] as const
+
 export const updateVideoProgressSchema = z.object({
-  progressState: z.enum(['unseen', 'in_progress', 'completed']),
+  progressState: z.enum(VIDEO_PROGRESS_STATES),
 })
 
 export const videoListQuerySchema = z.object({
@@ -159,3 +162,37 @@ export const bookmarksListQuerySchema = z.object({
 })
 
 export type BookmarksListQuery = z.infer<typeof bookmarksListQuerySchema>
+
+// ─── Progress ─────────────────────────────────────────────────────────────────
+
+// All five progress states (the shared progress_state enum, SPEC §6). Drives the
+// progress page's state filter and the GET /api/progress query schema.
+export const PROGRESS_STATES = [
+  'unseen',
+  'in_progress',
+  'reviewing',
+  'mastered',
+  'completed',
+] as const
+
+// Kanji / vocabulary / grammar mastery uses this three-value subset
+// (`unseen → reviewing → mastered`); videos use VIDEO_PROGRESS_STATES.
+export const STUDY_PROGRESS_STATES = ['unseen', 'reviewing', 'mastered'] as const
+
+export type StudyProgressState = (typeof STUDY_PROGRESS_STATES)[number]
+
+// PATCH /api/{kanji,vocabulary,grammar}/[id]/progress. Deliberately narrower than
+// the shared enum: a kanji can't be set to `in_progress`/`completed`.
+export const updateStudyProgressSchema = z.object({
+  progressState: z.enum(STUDY_PROGRESS_STATES),
+})
+
+export type UpdateStudyProgressInput = z.infer<typeof updateStudyProgressSchema>
+
+// GET /api/progress filters: optional resource type + optional progress state.
+export const progressListQuerySchema = z.object({
+  type: z.enum(BOOKMARK_TARGET_TYPES).optional(),
+  state: z.enum(PROGRESS_STATES).optional(),
+})
+
+export type ProgressListQuery = z.infer<typeof progressListQuerySchema>

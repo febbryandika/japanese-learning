@@ -1,8 +1,8 @@
 import { and, asc, count, eq, ilike, or, type SQL } from 'drizzle-orm'
 
 import { db } from '@/lib/db'
-import { vocabularyItems } from '@/lib/db/schema'
-import type { VocabPartOfSpeech } from '@/lib/validations'
+import { studyProgress, vocabularyItems } from '@/lib/db/schema'
+import type { ProgressState, VocabPartOfSpeech } from '@/lib/validations'
 
 // List/detail share the same core column set; the detail path additionally
 // exposes `notes` and the curated example sentence fields.
@@ -22,6 +22,9 @@ export type VocabularyListItem = {
   meaning: string
   partOfSpeech: string | null
   jlptLevel: string
+  // The caller's mastery state, joined per user on the list path. Optional so the
+  // detail/bookmark/progress paths (which don't join it here) stay type-clean.
+  progressState?: ProgressState
 }
 
 export type VocabularyDetail = VocabularyListItem & {
@@ -37,12 +40,10 @@ type ListParams = {
   pageSize: number
 }
 
-export async function listVocabulary({
-  q,
-  partOfSpeech,
-  page,
-  pageSize,
-}: ListParams): Promise<{ items: VocabularyListItem[]; total: number }> {
+export async function listVocabulary(
+  { q, partOfSpeech, page, pageSize }: ListParams,
+  userId: string,
+): Promise<{ items: VocabularyListItem[]; total: number }> {
   const filters: SQL[] = []
 
   if (q) {
@@ -62,10 +63,20 @@ export async function listVocabulary({
 
   const where = filters.length ? and(...filters) : undefined
 
-  const [items, totalResult] = await Promise.all([
+  const [rows, totalResult] = await Promise.all([
     db
-      .select(listColumns)
+      .select({ ...listColumns, progressState: studyProgress.progressState })
       .from(vocabularyItems)
+      // Per-user progress so each card shows the caller's mastery badge; a missing
+      // row means `unseen`.
+      .leftJoin(
+        studyProgress,
+        and(
+          eq(studyProgress.targetId, vocabularyItems.id),
+          eq(studyProgress.targetType, 'vocabulary'),
+          eq(studyProgress.userId, userId),
+        ),
+      )
       .where(where)
       // `word` is not unique → add `id` as a tiebreaker so offset paging is
       // deterministic (no duplicate/skipped rows across pages).
@@ -74,6 +85,11 @@ export async function listVocabulary({
       .offset((page - 1) * pageSize),
     db.select({ total: count() }).from(vocabularyItems).where(where),
   ])
+
+  const items = rows.map((row) => ({
+    ...row,
+    progressState: row.progressState ?? ('unseen' as const),
+  }))
 
   return { items, total: totalResult[0]?.total ?? 0 }
 }

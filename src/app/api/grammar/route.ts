@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const { q, jlptLevel, page, pageSize } = parsed.data
   const [{ items, total }, jlptLevels] = await Promise.all([
-    listGrammar({ q, jlptLevel, page, pageSize }),
+    listGrammar({ q, jlptLevel, page, pageSize }, session.user.id),
     getJlptLevelOptions(),
   ])
 

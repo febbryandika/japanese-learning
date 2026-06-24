@@ -1,8 +1,8 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 
-import type { ProgressState, VideoProgressState } from '@/lib/validations'
+import type { ProgressState } from '@/lib/validations'
 
 export type VideoGroup = {
   id: string
@@ -32,11 +32,6 @@ export type VideoLessonDetail = {
   group: { slug: string; title: string }
   // The detail route includes the caller's bookmark state.
   isBookmarked: boolean
-}
-
-type UpdateProgressResponse = {
-  progressState: VideoProgressState
-  completedAt: string | null
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -72,48 +67,5 @@ export function useVideoLesson(lessonId: string) {
     queryKey: ['video', lessonId],
     queryFn: () => fetchJson<VideoLessonDetail>(`/api/videos/${lessonId}`),
     enabled: Boolean(lessonId),
-  })
-}
-
-export function useUpdateVideoProgress(lessonId: string, groupId?: string) {
-  const queryClient = useQueryClient()
-  const lessonKey = ['video', lessonId] as const
-
-  return useMutation({
-    mutationFn: async (progressState: VideoProgressState) => {
-      const res = await fetch(`/api/videos/${lessonId}/progress`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ progressState }),
-      })
-      if (!res.ok) {
-        throw new Error(`Request failed with status ${res.status}`)
-      }
-      return res.json() as Promise<UpdateProgressResponse>
-    },
-    // Optimistically reflect the new state in the cached lesson detail.
-    onMutate: async (progressState) => {
-      await queryClient.cancelQueries({ queryKey: lessonKey })
-      const previous = queryClient.getQueryData<VideoLessonDetail>(lessonKey)
-      if (previous) {
-        queryClient.setQueryData<VideoLessonDetail>(lessonKey, {
-          ...previous,
-          progressState,
-        })
-      }
-      return { previous }
-    },
-    onError: (_error, _progressState, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(lessonKey, context.previous)
-      }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: lessonKey })
-      queryClient.invalidateQueries({ queryKey: ['lesson-groups'] })
-      if (groupId) {
-        queryClient.invalidateQueries({ queryKey: ['videos', groupId] })
-      }
-    },
   })
 }

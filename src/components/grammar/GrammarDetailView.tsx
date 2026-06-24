@@ -2,15 +2,20 @@
 
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { useGrammarDetail } from '@/hooks/use-grammar'
+import { useUpdateProgress } from '@/hooks/use-progress'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { STUDY_PROGRESS_STATES } from '@/lib/validations'
 
 export function GrammarDetailView({ id }: { id: string }) {
   const { data: grammar, isPending, isError, refetch } = useGrammarDetail(id)
+  const updateProgress = useUpdateProgress()
 
   if (isPending) {
     return <DetailSkeleton />
@@ -33,7 +38,25 @@ export function GrammarDetailView({ id }: { id: string }) {
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <Badge variant="secondary">{grammar.jlptLevel}</Badge>
-          <BookmarkButton targetType="grammar" targetId={grammar.id} />
+          <div className="flex items-center gap-2">
+            <ProgressSelector
+              value={grammar.progressState}
+              options={STUDY_PROGRESS_STATES}
+              disabled={updateProgress.isPending}
+              onChange={(progressState) =>
+                updateProgress.mutate(
+                  { targetType: 'grammar', targetId: grammar.id, progressState },
+                  {
+                    onError: () =>
+                      toast.error(
+                        'Could not update progress. Please try again.',
+                      ),
+                  },
+                )
+              }
+            />
+            <BookmarkButton targetType="grammar" targetId={grammar.id} />
+          </div>
         </div>
         <h1 className="text-3xl leading-tight font-semibold" lang="ja">
           {grammar.pattern}

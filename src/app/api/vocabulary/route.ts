@@ -25,12 +25,10 @@ export async function GET(request: NextRequest) {
   }
 
   const { q, partOfSpeech, page, pageSize } = parsed.data
-  const { items, total } = await listVocabulary({
-    q,
-    partOfSpeech,
-    page,
-    pageSize,
-  })
+  const { items, total } = await listVocabulary(
+    { q, partOfSpeech, page, pageSize },
+    session.user.id,
+  )
 
   return NextResponse.json({
     data: items,

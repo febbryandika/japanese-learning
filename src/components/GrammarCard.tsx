@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { ProgressBadge } from '@/components/ProgressBadge'
 import type { GrammarListItem } from '@/hooks/use-grammar'
 
 export function GrammarCard({ grammar }: { grammar: GrammarListItem }) {
@@ -13,8 +14,11 @@ export function GrammarCard({ grammar }: { grammar: GrammarListItem }) {
             {grammar.pattern}
           </p>
           <p className="line-clamp-2 text-sm">{grammar.meaning}</p>
-          <div className="pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <Badge variant="secondary">{grammar.jlptLevel}</Badge>
+            {grammar.progressState ? (
+              <ProgressBadge state={grammar.progressState} />
+            ) : null}
           </div>
         </CardContent>
       </Card>

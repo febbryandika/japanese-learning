@@ -7,12 +7,15 @@ import type {
   GrammarExample,
   GrammarListItem,
 } from '@/services/grammar.service'
-import type { JlptLevel } from '@/lib/validations'
+import type { JlptLevel, ProgressState } from '@/lib/validations'
 
 export type { GrammarDetail, GrammarExample, GrammarListItem }
 
-// The detail route augments the grammar item with the caller's bookmark state.
-export type GrammarDetailResponse = GrammarDetail & { isBookmarked: boolean }
+// The detail route augments the grammar item with the caller's bookmark and progress state.
+export type GrammarDetailResponse = GrammarDetail & {
+  isBookmarked: boolean
+  progressState: ProgressState
+}
 
 export type GrammarListResponse = {
   data: GrammarListItem[]
