@@ -28,6 +28,12 @@ const PROGRESS_CONFIG: Record<ProgressState, { label: string; className: string 
   },
 }
 
+// State labels, keyed by state — shared with ProgressSelector so the badge and
+// the selector dropdown never drift apart.
+export const PROGRESS_LABELS = Object.fromEntries(
+  Object.entries(PROGRESS_CONFIG).map(([state, config]) => [state, config.label]),
+) as Record<ProgressState, string>
+
 export function ProgressBadge({
   state,
   className,

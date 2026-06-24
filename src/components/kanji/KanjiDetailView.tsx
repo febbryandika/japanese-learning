@@ -2,15 +2,20 @@
 
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { useKanjiDetail } from '@/hooks/use-kanji'
+import { useUpdateProgress } from '@/hooks/use-progress'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { STUDY_PROGRESS_STATES } from '@/lib/validations'
 
 export function KanjiDetailView({ id }: { id: string }) {
   const { data: kanji, isPending, isError, refetch } = useKanjiDetail(id)
+  const updateProgress = useUpdateProgress()
 
   if (isPending) {
     return <DetailSkeleton />
@@ -34,11 +39,23 @@ export function KanjiDetailView({ id }: { id: string }) {
         <span className="text-7xl leading-none" lang="ja">
           {kanji.character}
         </span>
-        <BookmarkButton
-          targetType="kanji"
-          targetId={kanji.id}
-          className="order-last ml-auto"
-        />
+        <div className="order-last ml-auto flex items-center gap-2">
+          <ProgressSelector
+            value={kanji.progressState}
+            options={STUDY_PROGRESS_STATES}
+            disabled={updateProgress.isPending}
+            onChange={(progressState) =>
+              updateProgress.mutate(
+                { targetType: 'kanji', targetId: kanji.id, progressState },
+                {
+                  onError: () =>
+                    toast.error('Could not update progress. Please try again.'),
+                },
+              )
+            }
+          />
+          <BookmarkButton targetType="kanji" targetId={kanji.id} />
+        </div>
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{kanji.jlptLevel}</Badge>

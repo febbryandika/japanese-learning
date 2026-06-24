@@ -1,8 +1,12 @@
 import { and, asc, count, eq, ilike, or, type SQL } from 'drizzle-orm'
 
 import { db } from '@/lib/db'
-import { kanjiItems } from '@/lib/db/schema'
-import { kanjiCompoundSchema, type KanjiCompound } from '@/lib/validations'
+import { kanjiItems, studyProgress } from '@/lib/db/schema'
+import {
+  kanjiCompoundSchema,
+  type KanjiCompound,
+  type ProgressState,
+} from '@/lib/validations'
 
 // List/detail share the same public column set; `notes` is never exposed raw —
 // it is parsed into `compounds` on the detail path only.
@@ -24,6 +28,9 @@ export type KanjiListItem = {
   meaning: string
   strokeCount: number | null
   jlptLevel: string
+  // The caller's mastery state, joined per user on the list path. Optional so the
+  // detail/bookmark/progress paths (which don't join it here) stay type-clean.
+  progressState?: ProgressState
 }
 
 export type KanjiDetail = KanjiListItem & {
@@ -37,12 +44,10 @@ type ListParams = {
   pageSize: number
 }
 
-export async function listKanji({
-  q,
-  strokeCount,
-  page,
-  pageSize,
-}: ListParams): Promise<{ items: KanjiListItem[]; total: number }> {
+export async function listKanji(
+  { q, strokeCount, page, pageSize }: ListParams,
+  userId: string,
+): Promise<{ items: KanjiListItem[]; total: number }> {
   const filters: SQL[] = []
 
   if (q) {
@@ -63,10 +68,20 @@ export async function listKanji({
 
   const where = filters.length ? and(...filters) : undefined
 
-  const [items, totalResult] = await Promise.all([
+  const [rows, totalResult] = await Promise.all([
     db
-      .select(listColumns)
+      .select({ ...listColumns, progressState: studyProgress.progressState })
       .from(kanjiItems)
+      // Per-user progress so each card shows the caller's mastery badge; a missing
+      // row means `unseen`.
+      .leftJoin(
+        studyProgress,
+        and(
+          eq(studyProgress.targetId, kanjiItems.id),
+          eq(studyProgress.targetType, 'kanji'),
+          eq(studyProgress.userId, userId),
+        ),
+      )
       .where(where)
       // `character` is unique → stable ordering, so offset paging is deterministic.
       .orderBy(asc(kanjiItems.character))
@@ -74,6 +89,11 @@ export async function listKanji({
       .offset((page - 1) * pageSize),
     db.select({ total: count() }).from(kanjiItems).where(where),
   ])
+
+  const items = rows.map((row) => ({
+    ...row,
+    progressState: row.progressState ?? ('unseen' as const),
+  }))
 
   return { items, total: totalResult[0]?.total ?? 0 }
 }

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
 import { getGrammarDetail } from '@/services/grammar.service'
 import { isBookmarked } from '@/services/bookmark.service'
+import { recordView } from '@/services/progress.service'
 
 export async function GET(
   _request: Request,
@@ -20,5 +21,10 @@ export async function GET(
   }
 
   const bookmarked = await isBookmarked(session.user.id, 'grammar', id)
-  return NextResponse.json({ ...grammar, isBookmarked: bookmarked })
+  const progressState = await recordView(session.user.id, 'grammar', id)
+  return NextResponse.json({
+    ...grammar,
+    isBookmarked: bookmarked,
+    progressState,
+  })
 }

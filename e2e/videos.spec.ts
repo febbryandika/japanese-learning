@@ -25,23 +25,27 @@ test('browse groups → open lesson → mark completed → persists on reload', 
   // Lesson list → open the first lesson.
   await page.getByRole('link', { name: /N2文法 入門/ }).click()
 
-  // Lesson detail: embed + title + initial "Not started" state.
+  // Lesson detail: embed + title + initial "Not started" state in the selector.
   await expect(
     page.getByRole('heading', { name: 'N2文法 入門' }),
   ).toBeVisible()
   await expect(page.locator('iframe')).toBeVisible()
-  await expect(page.getByText('Not started', { exact: true })).toBeVisible()
+  const progressSelector = page.getByRole('combobox', {
+    name: 'Set progress state',
+  })
+  await expect(progressSelector).toContainText('Not started')
 
-  // Mark completed, waiting for the server write before reloading.
+  // Mark completed via the progress selector, waiting for the server write.
   const progressSaved = page.waitForResponse(
     (res) =>
       res.url().includes('/progress') && res.request().method() === 'PATCH',
   )
-  await page.getByRole('button', { name: 'Mark completed' }).click()
+  await progressSelector.click()
+  await page.getByRole('option', { name: 'Completed' }).click()
   await progressSaved
-  await expect(page.getByText('Completed', { exact: true })).toBeVisible()
+  await expect(progressSelector).toContainText('Completed')
 
   // Progress persists across a full reload (read back from the DB).
   await page.reload()
-  await expect(page.getByText('Completed', { exact: true })).toBeVisible()
+  await expect(progressSelector).toContainText('Completed')
 })

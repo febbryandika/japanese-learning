@@ -2,14 +2,16 @@
 
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
-import { useUpdateVideoProgress, useVideoLesson } from '@/hooks/use-videos'
+import { useVideoLesson } from '@/hooks/use-videos'
+import { useUpdateProgress } from '@/hooks/use-progress'
 import { VideoPlayer } from '@/components/VideoPlayer'
 import { BookmarkButton } from '@/components/BookmarkButton'
-import { ProgressBadge } from '@/components/ProgressBadge'
+import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/videos/ErrorState'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { VIDEO_PROGRESS_STATES } from '@/lib/validations'
 import { formatDuration } from '@/lib/utils'
 
 export function LessonDetailView({
@@ -20,7 +22,7 @@ export function LessonDetailView({
   groupSlug: string
 }) {
   const { data: lesson, isPending, isError, refetch } = useVideoLesson(lessonId)
-  const updateProgress = useUpdateVideoProgress(lessonId, lesson?.lessonGroupId)
+  const updateProgress = useUpdateProgress()
 
   if (isPending) {
     return <DetailSkeleton />
@@ -31,14 +33,6 @@ export function LessonDetailView({
   }
 
   const duration = formatDuration(lesson.durationSeconds)
-
-  function handleMarkInProgress() {
-    updateProgress.mutate('in_progress')
-  }
-
-  function handleMarkCompleted() {
-    updateProgress.mutate('completed')
-  }
 
   return (
     <article className="space-y-6">
@@ -53,10 +47,7 @@ export function LessonDetailView({
       <VideoPlayer embedUrl={lesson.embedUrl} title={lesson.title} />
 
       <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">{lesson.title}</h1>
-          <ProgressBadge state={lesson.progressState} />
-        </div>
+        <h1 className="text-2xl font-semibold">{lesson.title}</h1>
         {duration ? (
           <p className="text-sm text-muted-foreground">{duration}</p>
         ) : null}
@@ -65,24 +56,25 @@ export function LessonDetailView({
         ) : null}
       </header>
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          variant="outline"
-          onClick={handleMarkInProgress}
-          disabled={
-            updateProgress.isPending || lesson.progressState === 'in_progress'
+      <div className="flex flex-wrap items-center gap-3">
+        <ProgressSelector
+          value={lesson.progressState}
+          options={VIDEO_PROGRESS_STATES}
+          disabled={updateProgress.isPending}
+          onChange={(progressState) =>
+            updateProgress.mutate(
+              {
+                targetType: 'video_lesson',
+                targetId: lesson.id,
+                progressState,
+              },
+              {
+                onError: () =>
+                  toast.error('Could not update progress. Please try again.'),
+              },
+            )
           }
-        >
-          Mark in progress
-        </Button>
-        <Button
-          onClick={handleMarkCompleted}
-          disabled={
-            updateProgress.isPending || lesson.progressState === 'completed'
-          }
-        >
-          Mark completed
-        </Button>
+        />
         <BookmarkButton
           targetType="video_lesson"
           targetId={lesson.id}

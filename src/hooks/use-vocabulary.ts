@@ -6,13 +6,14 @@ import type {
   VocabularyDetail,
   VocabularyListItem,
 } from '@/services/vocabulary.service'
-import type { VocabPartOfSpeech } from '@/lib/validations'
+import type { ProgressState, VocabPartOfSpeech } from '@/lib/validations'
 
 export type { VocabularyDetail, VocabularyListItem }
 
-// The detail route augments the vocabulary with the caller's bookmark state.
+// The detail route augments the vocabulary with the caller's bookmark and progress state.
 export type VocabularyDetailResponse = VocabularyDetail & {
   isBookmarked: boolean
+  progressState: ProgressState
 }
 
 export type VocabularyListResponse = {

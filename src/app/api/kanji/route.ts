@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const { q, strokeCount, page, pageSize } = parsed.data
   const [{ items, total }, strokeCounts] = await Promise.all([
-    listKanji({ q, strokeCount, page, pageSize }),
+    listKanji({ q, strokeCount, page, pageSize }, session.user.id),
     getStrokeCountOptions(),
   ])
 
