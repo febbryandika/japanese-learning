@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from 'react'
 
-import { useKanjiList } from '@/hooks/use-kanji'
-import { KanjiCard } from '@/components/KanjiCard'
+import { useVocabularyList } from '@/hooks/use-vocabulary'
+import { VocabularyCard } from '@/components/VocabularyCard'
 import { PaginationControls } from '@/components/PaginationControls'
 import { ErrorState } from '@/components/ErrorState'
+import {
+  VOCAB_PARTS_OF_SPEECH,
+  VOCAB_POS_LABELS,
+  type VocabPartOfSpeech,
+} from '@/lib/validations'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -18,25 +23,30 @@ import {
 
 const PAGE_SIZE = 24
 
-export function KanjiBrowser() {
+// Static dropdown options — `all` plus the fixed N2 part-of-speech set.
+const posItems: Record<string, string> = {
+  all: 'All parts of speech',
+  ...Object.fromEntries(
+    VOCAB_PARTS_OF_SPEECH.map((pos) => [pos, VOCAB_POS_LABELS[pos]]),
+  ),
+}
+
+export function VocabularyBrowser() {
   const [search, setSearch] = useState('')
-  const [strokeCount, setStrokeCount] = useState<number | undefined>(undefined)
+  const [partOfSpeech, setPartOfSpeech] = useState<VocabPartOfSpeech | undefined>(
+    undefined,
+  )
   const [page, setPage] = useState(1)
 
   const debouncedSearch = useDebouncedValue(search.trim(), 300)
 
-  const { data, isPending, isError, isPlaceholderData, refetch } = useKanjiList({
-    q: debouncedSearch || undefined,
-    strokeCount,
-    page,
-    pageSize: PAGE_SIZE,
-  })
-
-  const strokeCounts = data?.strokeCounts ?? []
-  const strokeItems: Record<string, string> = {
-    all: 'All stroke counts',
-    ...Object.fromEntries(strokeCounts.map((n) => [String(n), `${n} strokes`])),
-  }
+  const { data, isPending, isError, isPlaceholderData, refetch } =
+    useVocabularyList({
+      q: debouncedSearch || undefined,
+      partOfSpeech,
+      page,
+      pageSize: PAGE_SIZE,
+    })
 
   return (
     <div className="space-y-6">
@@ -48,25 +58,27 @@ export function KanjiBrowser() {
             setSearch(event.target.value)
             setPage(1)
           }}
-          placeholder="Search by character, reading, or meaning"
-          aria-label="Search kanji"
+          placeholder="Search by word, reading, or meaning"
+          aria-label="Search vocabulary"
           className="sm:max-w-xs"
         />
         <Select
-          items={strokeItems}
-          value={strokeCount == null ? 'all' : String(strokeCount)}
+          items={posItems}
+          value={partOfSpeech ?? 'all'}
           onValueChange={(value) => {
-            setStrokeCount(
-              value == null || value === 'all' ? undefined : Number(value),
+            setPartOfSpeech(
+              value == null || value === 'all'
+                ? undefined
+                : (value as VocabPartOfSpeech),
             )
             setPage(1)
           }}
         >
-          <SelectTrigger className="w-48" aria-label="Filter by stroke count">
+          <SelectTrigger className="w-56" aria-label="Filter by part of speech">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(strokeItems).map(([value, label]) => (
+            {Object.entries(posItems).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
               </SelectItem>
@@ -75,7 +87,7 @@ export function KanjiBrowser() {
         </Select>
       </div>
 
-      <KanjiResults
+      <VocabularyResults
         data={data}
         isPending={isPending}
         isError={isError}
@@ -87,7 +99,7 @@ export function KanjiBrowser() {
   )
 }
 
-function KanjiResults({
+function VocabularyResults({
   data,
   isPending,
   isError,
@@ -95,7 +107,7 @@ function KanjiResults({
   onRetry,
   onPageChange,
 }: {
-  data: ReturnType<typeof useKanjiList>['data']
+  data: ReturnType<typeof useVocabularyList>['data']
   isPending: boolean
   isError: boolean
   isPlaceholderData: boolean
@@ -107,13 +119,11 @@ function KanjiResults({
   }
 
   if (isError || !data) {
-    return <ErrorState message="Couldn't load kanji." onRetry={onRetry} />
+    return <ErrorState message="Couldn't load vocabulary." onRetry={onRetry} />
   }
 
   if (data.data.length === 0) {
-    return (
-      <p className="text-muted-foreground">No kanji match your search.</p>
-    )
+    return <p className="text-muted-foreground">No vocabulary match your search.</p>
   }
 
   return (
@@ -123,9 +133,9 @@ function KanjiResults({
           isPlaceholderData ? 'opacity-60 transition-opacity' : ''
         }`}
       >
-        {data.data.map((kanji) => (
-          <li key={kanji.id}>
-            <KanjiCard kanji={kanji} />
+        {data.data.map((vocab) => (
+          <li key={vocab.id}>
+            <VocabularyCard vocab={vocab} />
           </li>
         ))}
       </ul>

@@ -67,3 +67,48 @@ export const kanjiCompoundSchema = z.array(
 )
 
 export type KanjiCompound = z.infer<typeof kanjiCompoundSchema>[number]
+
+// ─── Vocabulary ─────────────────────────────────────────────────────────────
+
+// The fixed N2 part-of-speech set (SPEC §9). Single source of truth for both the
+// query enum below and the filter dropdown labels, so the two never drift.
+export const VOCAB_PARTS_OF_SPEECH = [
+  'noun',
+  'verb',
+  'i-adjective',
+  'na-adjective',
+  'adverb',
+  'katakana',
+  'conjunction',
+  'prefix',
+  'suffix',
+  'idiom',
+] as const
+
+export type VocabPartOfSpeech = (typeof VOCAB_PARTS_OF_SPEECH)[number]
+
+export const VOCAB_POS_LABELS: Record<VocabPartOfSpeech, string> = {
+  noun: 'Noun',
+  verb: 'Verb',
+  'i-adjective': 'i-Adjective',
+  'na-adjective': 'na-Adjective',
+  adverb: 'Adverb',
+  katakana: 'Katakana',
+  conjunction: 'Conjunction',
+  prefix: 'Prefix',
+  suffix: 'Suffix',
+  idiom: 'Idiom',
+}
+
+// `q` matches across word / reading / meaning (server-side ILIKE).
+// `partOfSpeech` is an optional exact filter. `page` / `pageSize` drive
+// server-side pagination; coerced from string query params and bounded so a
+// response can never request an unbounded page.
+export const vocabularyListQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  partOfSpeech: z.enum(VOCAB_PARTS_OF_SPEECH).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(24),
+})
+
+export type VocabularyListQuery = z.infer<typeof vocabularyListQuerySchema>
