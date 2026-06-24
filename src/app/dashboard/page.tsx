@@ -1,18 +1,18 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 
 import { getServerSession } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { userProfiles } from '@/lib/db/schema'
 import { LogoutButton } from '@/components/LogoutButton'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { DashboardView } from '@/components/dashboard/DashboardView'
+
+const NAV_LINKS = [
+  { href: '/videos', label: 'Videos' },
+  { href: '/kanji', label: 'Kanji' },
+  { href: '/vocabulary', label: 'Vocabulary' },
+  { href: '/grammar', label: 'Grammar' },
+  { href: '/bookmarks', label: 'Bookmarks' },
+  { href: '/progress', label: 'Progress' },
+]
 
 export default async function DashboardPage() {
   const session = await getServerSession()
@@ -20,65 +20,31 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  const [profile] = await db
-    .select({ role: userProfiles.role })
-    .from(userProfiles)
-    .where(eq(userProfiles.userId, session.user.id))
-    .limit(1)
-
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome, {session.user.name}</CardTitle>
-          <CardDescription>{session.user.email}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <main className="mx-auto w-full max-w-5xl space-y-6 p-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Role:{' '}
-            <span className="font-medium text-foreground">
-              {profile?.role ?? 'learner'}
-            </span>
+            Welcome back, {session.user.name}
           </p>
+        </div>
+        <LogoutButton />
+      </header>
+
+      <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium">
+        {NAV_LINKS.map((link) => (
           <Link
-            href="/videos"
-            className="block w-fit text-sm font-medium text-foreground underline"
+            key={link.href}
+            href={link.href}
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
-            Browse video lessons
+            {link.label}
           </Link>
-          <Link
-            href="/kanji"
-            className="block w-fit text-sm font-medium text-foreground underline"
-          >
-            Browse kanji
-          </Link>
-          <Link
-            href="/vocabulary"
-            className="block w-fit text-sm font-medium text-foreground underline"
-          >
-            Browse vocabulary
-          </Link>
-          <Link
-            href="/grammar"
-            className="block w-fit text-sm font-medium text-foreground underline"
-          >
-            Browse grammar
-          </Link>
-          <Link
-            href="/bookmarks"
-            className="block w-fit text-sm font-medium text-foreground underline"
-          >
-            View bookmarks
-          </Link>
-          <Link
-            href="/progress"
-            className="block w-fit text-sm font-medium text-foreground underline"
-          >
-            View progress
-          </Link>
-          <LogoutButton />
-        </CardContent>
-      </Card>
+        ))}
+      </nav>
+
+      <DashboardView />
     </main>
   )
 }
