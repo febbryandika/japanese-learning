@@ -11,6 +11,9 @@ import type { JlptLevel } from '@/lib/validations'
 
 export type { GrammarDetail, GrammarExample, GrammarListItem }
 
+// The detail route augments the grammar item with the caller's bookmark state.
+export type GrammarDetailResponse = GrammarDetail & { isBookmarked: boolean }
+
 export type GrammarListResponse = {
   data: GrammarListItem[]
   pagination: {
@@ -61,7 +64,7 @@ export function useGrammarList(filters: GrammarListFilters) {
 export function useGrammarDetail(id: string) {
   return useQuery({
     queryKey: ['grammar', id],
-    queryFn: () => fetchJson<GrammarDetail>(`/api/grammar/${id}`),
+    queryFn: () => fetchJson<GrammarDetailResponse>(`/api/grammar/${id}`),
     enabled: Boolean(id),
   })
 }

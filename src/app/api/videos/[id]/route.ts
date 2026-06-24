@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { getServerSession } from '@/lib/auth'
 import { getLessonDetail } from '@/services/video.service'
+import { isBookmarked } from '@/services/bookmark.service'
 
 export async function GET(
   _request: Request,
@@ -18,5 +19,6 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  return NextResponse.json(lesson)
+  const bookmarked = await isBookmarked(session.user.id, 'video_lesson', id)
+  return NextResponse.json({ ...lesson, isBookmarked: bookmarked })
 }

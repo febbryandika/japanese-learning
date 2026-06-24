@@ -180,3 +180,29 @@ export const studyProgress = pgTable(
     index('idx_progress_user').on(t.userId, t.targetType),
   ],
 )
+
+// ─── Bookmarks ──────────────────────────────────────────────────────────────
+// One row per (user, target). The unique constraint makes a bookmark a set
+// membership — toggling just inserts or deletes. `targetId` has no FK (it spans
+// four resource tables), so existence is validated in the service before write.
+
+export const bookmarks = pgTable(
+  'bookmarks',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text('user_id').notNull(),
+    targetType: text('target_type', {
+      enum: ['kanji', 'vocabulary', 'grammar', 'video_lesson'],
+    }).notNull(),
+    targetId: text('target_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    unique('uq_bookmark').on(t.userId, t.targetType, t.targetId),
+    index('idx_bookmarks_user').on(t.userId, t.targetType),
+  ],
+)

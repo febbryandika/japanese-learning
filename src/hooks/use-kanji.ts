@@ -7,6 +7,9 @@ import type { KanjiCompound } from '@/lib/validations'
 
 export type { KanjiCompound, KanjiDetail, KanjiListItem }
 
+// The detail route augments the kanji with the caller's bookmark state.
+export type KanjiDetailResponse = KanjiDetail & { isBookmarked: boolean }
+
 export type KanjiListResponse = {
   data: KanjiListItem[]
   pagination: {
@@ -57,7 +60,7 @@ export function useKanjiList(filters: KanjiListFilters) {
 export function useKanjiDetail(id: string) {
   return useQuery({
     queryKey: ['kanji', id],
-    queryFn: () => fetchJson<KanjiDetail>(`/api/kanji/${id}`),
+    queryFn: () => fetchJson<KanjiDetailResponse>(`/api/kanji/${id}`),
     enabled: Boolean(id),
   })
 }

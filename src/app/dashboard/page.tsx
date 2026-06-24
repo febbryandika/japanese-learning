@@ -64,6 +64,12 @@ export default async function DashboardPage() {
           >
             Browse grammar
           </Link>
+          <Link
+            href="/bookmarks"
+            className="block w-fit text-sm font-medium text-foreground underline"
+          >
+            View bookmarks
+          </Link>
           <LogoutButton />
         </CardContent>
       </Card>

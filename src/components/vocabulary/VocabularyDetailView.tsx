@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 import { useVocabularyDetail } from '@/hooks/use-vocabulary'
+import { BookmarkButton } from '@/components/BookmarkButton'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -48,6 +49,11 @@ export function VocabularyDetailView({ id }: { id: string }) {
           {label ? (
             <span className="text-sm text-muted-foreground">{label}</span>
           ) : null}
+          <BookmarkButton
+            targetType="vocabulary"
+            targetId={vocab.id}
+            className="ml-auto"
+          />
         </div>
         <h1 className="text-4xl leading-none font-semibold" lang="ja">
           {vocab.word}

@@ -10,6 +10,11 @@ import type { VocabPartOfSpeech } from '@/lib/validations'
 
 export type { VocabularyDetail, VocabularyListItem }
 
+// The detail route augments the vocabulary with the caller's bookmark state.
+export type VocabularyDetailResponse = VocabularyDetail & {
+  isBookmarked: boolean
+}
+
 export type VocabularyListResponse = {
   data: VocabularyListItem[]
   pagination: {
@@ -59,7 +64,7 @@ export function useVocabularyList(filters: VocabularyListFilters) {
 export function useVocabularyDetail(id: string) {
   return useQuery({
     queryKey: ['vocabulary', id],
-    queryFn: () => fetchJson<VocabularyDetail>(`/api/vocabulary/${id}`),
+    queryFn: () => fetchJson<VocabularyDetailResponse>(`/api/vocabulary/${id}`),
     enabled: Boolean(id),
   })
 }
