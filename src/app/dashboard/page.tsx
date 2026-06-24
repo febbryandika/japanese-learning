@@ -52,6 +52,12 @@ export default async function DashboardPage() {
           >
             Browse kanji
           </Link>
+          <Link
+            href="/vocabulary"
+            className="block w-fit text-sm font-medium text-foreground underline"
+          >
+            Browse vocabulary
+          </Link>
           <LogoutButton />
         </CardContent>
       </Card>
