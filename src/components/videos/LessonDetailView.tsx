@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 
 import { useUpdateVideoProgress, useVideoLesson } from '@/hooks/use-videos'
 import { VideoPlayer } from '@/components/VideoPlayer'
+import { BookmarkButton } from '@/components/BookmarkButton'
 import { ProgressBadge } from '@/components/ProgressBadge'
 import { ErrorState } from '@/components/videos/ErrorState'
 import { Button } from '@/components/ui/button'
@@ -82,6 +83,11 @@ export function LessonDetailView({
         >
           Mark completed
         </Button>
+        <BookmarkButton
+          targetType="video_lesson"
+          targetId={lesson.id}
+          className="ml-auto"
+        />
       </div>
     </article>
   )

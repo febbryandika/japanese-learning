@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 import { useKanjiDetail } from '@/hooks/use-kanji'
+import { BookmarkButton } from '@/components/BookmarkButton'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -33,6 +34,11 @@ export function KanjiDetailView({ id }: { id: string }) {
         <span className="text-7xl leading-none" lang="ja">
           {kanji.character}
         </span>
+        <BookmarkButton
+          targetType="kanji"
+          targetId={kanji.id}
+          className="order-last ml-auto"
+        />
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{kanji.jlptLevel}</Badge>

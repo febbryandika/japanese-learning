@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { getServerSession } from '@/lib/auth'
 import { getKanjiDetail } from '@/services/kanji.service'
+import { isBookmarked } from '@/services/bookmark.service'
 
 export async function GET(
   _request: Request,
@@ -18,5 +19,6 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  return NextResponse.json(kanji)
+  const bookmarked = await isBookmarked(session.user.id, 'kanji', id)
+  return NextResponse.json({ ...kanji, isBookmarked: bookmarked })
 }

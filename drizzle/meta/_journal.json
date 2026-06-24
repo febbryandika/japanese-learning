@@ -36,6 +36,13 @@
       "when": 1782298007667,
       "tag": "0004_eager_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782303079446,
+      "tag": "0005_cool_beast",
+      "breakpoints": true
     }
   ]
 }

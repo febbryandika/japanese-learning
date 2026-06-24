@@ -30,6 +30,8 @@ export type VideoLessonDetail = {
   durationSeconds: number | null
   progressState: ProgressState
   group: { slug: string; title: string }
+  // The detail route includes the caller's bookmark state.
+  isBookmarked: boolean
 }
 
 type UpdateProgressResponse = {

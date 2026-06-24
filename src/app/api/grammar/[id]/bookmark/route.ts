@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 
 import { getServerSession } from '@/lib/auth'
-import { getGrammarDetail } from '@/services/grammar.service'
-import { isBookmarked } from '@/services/bookmark.service'
+import { toggleBookmark } from '@/services/bookmark.service'
 
-export async function GET(
+export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -14,11 +13,10 @@ export async function GET(
   }
 
   const { id } = await params
-  const grammar = await getGrammarDetail(id)
-  if (!grammar) {
+  const result = await toggleBookmark(session.user.id, 'grammar', id)
+  if (!result) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const bookmarked = await isBookmarked(session.user.id, 'grammar', id)
-  return NextResponse.json({ ...grammar, isBookmarked: bookmarked })
+  return NextResponse.json(result)
 }

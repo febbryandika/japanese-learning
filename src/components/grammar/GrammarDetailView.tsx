@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 import { useGrammarDetail } from '@/hooks/use-grammar'
+import { BookmarkButton } from '@/components/BookmarkButton'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,7 +31,10 @@ export function GrammarDetailView({ id }: { id: string }) {
       </Link>
 
       <header className="space-y-3">
-        <Badge variant="secondary">{grammar.jlptLevel}</Badge>
+        <div className="flex items-center justify-between gap-2">
+          <Badge variant="secondary">{grammar.jlptLevel}</Badge>
+          <BookmarkButton targetType="grammar" targetId={grammar.id} />
+        </div>
         <h1 className="text-3xl leading-tight font-semibold" lang="ja">
           {grammar.pattern}
         </h1>

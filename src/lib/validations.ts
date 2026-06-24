@@ -134,3 +134,28 @@ export const grammarListQuerySchema = z.object({
 })
 
 export type GrammarListQuery = z.infer<typeof grammarListQuerySchema>
+
+// ─── Bookmarks ────────────────────────────────────────────────────────────────
+
+// The four bookmarkable resource types (matches the `bookmarks.target_type`
+// enum, SPEC §6). Single source of truth for the query enum and the filter UI.
+export const BOOKMARK_TARGET_TYPES = [
+  'kanji',
+  'vocabulary',
+  'grammar',
+  'video_lesson',
+] as const
+
+export type BookmarkTargetType = (typeof BOOKMARK_TARGET_TYPES)[number]
+
+// The POST toggle routes carry `targetType` in the path and `targetId` as the
+// `[id]` param — there is no request body. This enum guards the targetType at
+// the service boundary; existence of the target row is checked there too.
+export const bookmarkTargetTypeSchema = z.enum(BOOKMARK_TARGET_TYPES)
+
+// `type` optionally narrows the bookmarks list to one resource type.
+export const bookmarksListQuerySchema = z.object({
+  type: z.enum(BOOKMARK_TARGET_TYPES).optional(),
+})
+
+export type BookmarksListQuery = z.infer<typeof bookmarksListQuerySchema>
