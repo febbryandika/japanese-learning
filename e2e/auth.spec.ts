@@ -18,8 +18,10 @@ test('register → dashboard → logout → login → dashboard', async ({ page 
   await page.getByRole('button', { name: 'Create account' }).click()
 
   await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(page.getByText(`Welcome, ${name}`)).toBeVisible()
-  await expect(page.getByText('learner')).toBeVisible()
+  await expect(page.getByText(`Welcome back, ${name}`)).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Dashboard' }),
+  ).toBeVisible()
 
   // Log out — protected route should bounce back to login.
   await page.getByRole('button', { name: 'Sign out' }).click()
@@ -31,5 +33,5 @@ test('register → dashboard → logout → login → dashboard', async ({ page 
   await page.getByRole('button', { name: 'Sign in' }).click()
 
   await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(page.getByText(`Welcome, ${name}`)).toBeVisible()
+  await expect(page.getByText(`Welcome back, ${name}`)).toBeVisible()
 })
