@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/kanji', label: 'Kanji' },
   { href: '/vocabulary', label: 'Vocabulary' },
   { href: '/grammar', label: 'Grammar' },
+  { href: '/mock-exams', label: 'Mock Exams' },
   { href: '/bookmarks', label: 'Bookmarks' },
   { href: '/progress', label: 'Progress' },
 ]

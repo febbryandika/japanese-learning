@@ -221,3 +221,36 @@ export const dashboardWeakAreaSchema = z.object({
 })
 
 export type DashboardWeakArea = z.infer<typeof dashboardWeakAreaSchema>
+
+// ─── Mock Exams ───────────────────────────────────────────────────────────────
+
+// The four JLPT mock-exam sections (SPEC §5.7). Single source of truth for the
+// detail page's section grouping and the seed data's allowed section names.
+export const EXAM_SECTIONS = ['文法', '語彙', '読解', '聴解'] as const
+
+export type ExamSection = (typeof EXAM_SECTIONS)[number]
+
+// A single answer to one question. Ids are validated as non-empty strings and
+// their existence is checked in the service (matching the codebase convention —
+// no .cuid2()). userAnswer must match one of the question's stored choices.
+export const examAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  userAnswer: z.string().min(1),
+})
+
+// PATCH /api/mock-exam-attempts/[attemptId] — periodic / on-navigation save of
+// in-progress answers. The array may be empty (clearing / a no-op autosave).
+export const saveExamAnswersSchema = z.object({
+  answers: z.array(examAnswerSchema),
+})
+
+// POST /api/mock-exam-attempts/[attemptId]/submit. `answers` is optional and may
+// be empty: auto-submit at time 0 can carry zero answers, and answers are already
+// persisted via PATCH. The server re-scores from the DB (never trusts the client).
+export const submitExamSchema = z.object({
+  answers: z.array(examAnswerSchema).optional().default([]),
+})
+
+export type ExamAnswerInput = z.infer<typeof examAnswerSchema>
+export type SaveExamAnswersInput = z.infer<typeof saveExamAnswersSchema>
+export type SubmitExamInput = z.infer<typeof submitExamSchema>
