@@ -194,7 +194,13 @@ function ResultView({
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href={`/mock-exams/${examId}/attempt/${data.id}/review`}
+          className={buttonVariants({ variant: 'default' })}
+        >
+          Review answers
+        </Link>
         <Link
           href={`/mock-exams/${examId}`}
           className={buttonVariants({ variant: 'outline' })}
