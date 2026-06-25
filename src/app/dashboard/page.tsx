@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/vocabulary', label: 'Vocabulary' },
   { href: '/grammar', label: 'Grammar' },
   { href: '/mock-exams', label: 'Mock Exams' },
+  { href: '/reader', label: 'Reader' },
   { href: '/bookmarks', label: 'Bookmarks' },
   { href: '/progress', label: 'Progress' },
 ]

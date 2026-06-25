@@ -57,6 +57,13 @@
       "when": 1782389034720,
       "tag": "0007_fresh_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782405994655,
+      "tag": "0008_blushing_tiger_shark",
+      "breakpoints": true
     }
   ]
 }
