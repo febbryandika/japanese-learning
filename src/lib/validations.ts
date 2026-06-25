@@ -254,3 +254,53 @@ export const submitExamSchema = z.object({
 export type ExamAnswerInput = z.infer<typeof examAnswerSchema>
 export type SaveExamAnswersInput = z.infer<typeof saveExamAnswersSchema>
 export type SubmitExamInput = z.infer<typeof submitExamSchema>
+
+// ─── Exam Review (GET /api/mock-exam-attempts/[attemptId]/review) ──────────────
+// The review exposes the answer key, so it is only ever built for a submitted
+// attempt owned by the requester. The service validates the computed payload
+// against these schemas before returning (same convention as the dashboard).
+
+// One reviewed question: the user's choice alongside the correct one. `userAnswer`
+// is null when the question was left unanswered; `correctAnswer`/`explanation`
+// are safe to send only because the attempt is already submitted.
+export const examReviewQuestionSchema = z.object({
+  id: z.string(),
+  sectionName: z.string(),
+  prompt: z.string(),
+  choices: z.array(z.string()),
+  userAnswer: z.string().nullable(),
+  correctAnswer: z.string(),
+  explanation: z.string().nullable(),
+  isCorrect: z.boolean(),
+})
+
+// Per-section tally for the score breakdown card.
+export const examReviewSectionScoreSchema = z.object({
+  sectionName: z.string(),
+  scoreTotal: z.number().int().min(0),
+  scoreMax: z.number().int().min(0),
+  percentage: z.number().int().min(0).max(100),
+})
+
+// `submittedAt` is an ISO string (Date serialized over JSON).
+export const examReviewResponseSchema = z.object({
+  attempt: z.object({
+    id: z.string(),
+    examId: z.string(),
+    status: z.literal('submitted'),
+    submittedAt: z.string().nullable(),
+    scoreTotal: z.number().int().min(0),
+    scoreMax: z.number().int().min(0),
+    percentage: z.number().int().min(0).max(100),
+  }),
+  exam: z.object({
+    id: z.string(),
+    title: z.string(),
+  }),
+  sections: z.array(examReviewSectionScoreSchema),
+  questions: z.array(examReviewQuestionSchema),
+})
+
+export type ExamReviewQuestion = z.infer<typeof examReviewQuestionSchema>
+export type ExamReviewSectionScore = z.infer<typeof examReviewSectionScoreSchema>
+export type ExamReviewResponse = z.infer<typeof examReviewResponseSchema>

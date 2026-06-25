@@ -8,9 +8,13 @@ test('guest is redirected from /mock-exams to /login', async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/)
 })
 
-test('start → answer → save on navigate → resume → submit → score', async ({
+test('start → answer → save on navigate → resume → submit → score → review', async ({
   page,
 }) => {
+  // Heavy end-to-end flow (register → start → save → resume → submit → review)
+  // with on-demand dev compilation per route; the default 30s is too tight.
+  test.setTimeout(90_000)
+
   // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
   const email = `e2e+exam+${Date.now()}@example.com`
   await page.goto('/register')
@@ -68,4 +72,14 @@ test('start → answer → save on navigate → resume → submit → score', as
     page.getByRole('main').getByText('Exam submitted'),
   ).toBeVisible()
   await expect(page.getByText(/% correct/)).toBeVisible()
+
+  // Open the dedicated review page from the result card.
+  await page.getByRole('link', { name: 'Review answers' }).click()
+  await expect(page).toHaveURL(
+    /\/mock-exams\/[^/]+\/attempt\/[^/]+\/review$/,
+  )
+
+  // Per-section scores + the correct-answer indicator (vs user's answer) render.
+  await expect(page.getByText('Section scores')).toBeVisible()
+  await expect(page.getByText('Correct answer').first()).toBeVisible()
 })

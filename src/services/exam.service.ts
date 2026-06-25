@@ -7,7 +7,14 @@ import {
   mockExamAttempts,
   mockExamAttemptAnswers,
 } from '@/lib/db/schema'
-import { EXAM_SECTIONS, type ExamAnswerInput } from '@/lib/validations'
+import {
+  EXAM_SECTIONS,
+  examReviewResponseSchema,
+  type ExamAnswerInput,
+  type ExamReviewQuestion,
+  type ExamReviewResponse,
+  type ExamReviewSectionScore,
+} from '@/lib/validations'
 
 // Questions exposed to the client never include `correctAnswer`/`explanation`:
 // scoring is server-authoritative, so the answer key must not leave the server.
@@ -76,6 +83,15 @@ export class ExamAlreadySubmittedError extends Error {
     super('Attempt already submitted')
     this.name = 'ExamAlreadySubmittedError'
     this.result = result
+  }
+}
+
+// Thrown when review is requested for an attempt that hasn't been submitted yet
+// (route → 409). Review exposes the answer key, so it must stay gated until submit.
+export class AttemptNotSubmittedError extends Error {
+  constructor() {
+    super('Attempt not submitted')
+    this.name = 'AttemptNotSubmittedError'
   }
 }
 
@@ -420,5 +436,110 @@ export async function submitAttempt(
       .where(eq(mockExamAttempts.id, attemptId))
 
     return { scoreTotal, scoreMax, percentage: percentage(scoreTotal, scoreMax) }
+  })
+}
+
+// GET /api/mock-exam-attempts/[attemptId]/review — full results with the answer
+// key, own attempt only. `null` → 404 (also masks not-owned); throws
+// AttemptNotSubmittedError → 409 when still in progress. Three queries, no N+1.
+export async function getAttemptReview(
+  userId: string,
+  attemptId: string,
+): Promise<ExamReviewResponse | null> {
+  const [attempt] = await db
+    .select({
+      id: mockExamAttempts.id,
+      examId: mockExamAttempts.examId,
+      status: mockExamAttempts.status,
+      submittedAt: mockExamAttempts.submittedAt,
+      scoreTotal: mockExamAttempts.scoreTotal,
+      scoreMax: mockExamAttempts.scoreMax,
+      examTitle: mockExams.title,
+    })
+    .from(mockExamAttempts)
+    .innerJoin(mockExams, eq(mockExams.id, mockExamAttempts.examId))
+    .where(
+      and(
+        eq(mockExamAttempts.id, attemptId),
+        eq(mockExamAttempts.userId, userId),
+      ),
+    )
+    .limit(1)
+
+  if (!attempt) return null
+  if (attempt.status !== 'submitted') throw new AttemptNotSubmittedError()
+
+  // Full columns are safe now: the attempt is submitted and owned.
+  const questionRows = await db
+    .select({
+      id: mockExamQuestions.id,
+      sectionName: mockExamQuestions.sectionName,
+      prompt: mockExamQuestions.prompt,
+      choices: mockExamQuestions.choices,
+      correctAnswer: mockExamQuestions.correctAnswer,
+      explanation: mockExamQuestions.explanation,
+    })
+    .from(mockExamQuestions)
+    .where(eq(mockExamQuestions.examId, attempt.examId))
+    .orderBy(asc(mockExamQuestions.sortOrder))
+
+  const answerRows = await db
+    .select({
+      questionId: mockExamAttemptAnswers.questionId,
+      userAnswer: mockExamAttemptAnswers.userAnswer,
+      isCorrect: mockExamAttemptAnswers.isCorrect,
+    })
+    .from(mockExamAttemptAnswers)
+    .where(eq(mockExamAttemptAnswers.attemptId, attemptId))
+  const answerByQuestion = new Map(answerRows.map((a) => [a.questionId, a]))
+
+  const questions: ExamReviewQuestion[] = questionRows.map((q) => {
+    const answer = answerByQuestion.get(q.id)
+    return {
+      id: q.id,
+      sectionName: q.sectionName,
+      prompt: q.prompt,
+      choices: parseChoices(q.choices),
+      userAnswer: answer?.userAnswer ?? null,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation,
+      isCorrect: answer?.isCorrect ?? false,
+    }
+  })
+
+  // Per-section tallies from the persisted, authoritative isCorrect flags.
+  const bySection = new Map<string, { scoreTotal: number; scoreMax: number }>()
+  for (const q of questions) {
+    const tally = bySection.get(q.sectionName) ?? { scoreTotal: 0, scoreMax: 0 }
+    tally.scoreMax += 1
+    if (q.isCorrect) tally.scoreTotal += 1
+    bySection.set(q.sectionName, tally)
+  }
+
+  const sections: ExamReviewSectionScore[] = Array.from(bySection.entries())
+    .map(([sectionName, t]) => ({
+      sectionName,
+      scoreTotal: t.scoreTotal,
+      scoreMax: t.scoreMax,
+      percentage: percentage(t.scoreTotal, t.scoreMax),
+    }))
+    .sort((a, b) => sectionRank(a.sectionName) - sectionRank(b.sectionName))
+
+  const scoreTotal = attempt.scoreTotal ?? 0
+  const scoreMax = attempt.scoreMax ?? 0
+
+  return examReviewResponseSchema.parse({
+    attempt: {
+      id: attempt.id,
+      examId: attempt.examId,
+      status: attempt.status,
+      submittedAt: attempt.submittedAt?.toISOString() ?? null,
+      scoreTotal,
+      scoreMax,
+      percentage: percentage(scoreTotal, scoreMax),
+    },
+    exam: { id: attempt.examId, title: attempt.examTitle },
+    sections,
+    questions,
   })
 }

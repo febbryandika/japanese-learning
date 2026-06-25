@@ -8,11 +8,20 @@ import type {
   MockExamListItem,
   SubmitResult,
 } from '@/services/exam.service'
-import type { ExamAnswerInput } from '@/lib/validations'
+import type { ExamAnswerInput, ExamReviewResponse } from '@/lib/validations'
 
 // Timestamps arrive JSON-serialized (Date → ISO string).
 export type AttemptStateResponse = Omit<AttemptState, 'startedAt'> & {
   startedAt: string
+}
+
+// Sentinel for a review fetch hitting a not-yet-submitted attempt (HTTP 409) so
+// the view can render the "continue the exam" state instead of a generic error.
+export class NotSubmittedError extends Error {
+  constructor() {
+    super('Attempt not submitted')
+    this.name = 'NotSubmittedError'
+  }
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -47,6 +56,22 @@ export function useExamAttempt(attemptId: string) {
     queryFn: () =>
       fetchJson<AttemptStateResponse>(`/api/mock-exam-attempts/${attemptId}`),
     enabled: Boolean(attemptId),
+  })
+}
+
+export function useExamReview(attemptId: string) {
+  return useQuery({
+    queryKey: ['exam-review', attemptId],
+    queryFn: async () => {
+      const res = await fetch(`/api/mock-exam-attempts/${attemptId}/review`)
+      if (res.status === 409) throw new NotSubmittedError()
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`)
+      }
+      return res.json() as Promise<ExamReviewResponse>
+    },
+    enabled: Boolean(attemptId),
+    retry: false,
   })
 }
 
