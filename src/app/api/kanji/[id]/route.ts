@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { getServerSession } from '@/lib/auth'
+import { getGeneratedExamples } from '@/services/ai.service'
 import { getKanjiDetail } from '@/services/kanji.service'
 import { isBookmarked } from '@/services/bookmark.service'
 import { recordView } from '@/services/progress.service'
@@ -22,9 +23,11 @@ export async function GET(
 
   const bookmarked = await isBookmarked(session.user.id, 'kanji', id)
   const progressState = await recordView(session.user.id, 'kanji', id)
+  const generatedExamples = await getGeneratedExamples('kanji', id)
   return NextResponse.json({
     ...kanji,
     isBookmarked: bookmarked,
     progressState,
+    generatedExamples,
   })
 }

@@ -286,3 +286,34 @@ export const mockExamAttemptAnswers = pgTable(
   // onConflictDoUpdate as the user revises answers.
   (t) => [unique('uq_attempt_answer').on(t.attemptId, t.questionId)],
 )
+
+// ─── AI-Generated Examples ──────────────────────────────────────────────────
+// On-demand example sentences from OpenAI (gpt-4o-mini via `generateObject`).
+// Append-only: every generation is saved (status starts `pending`; there is no
+// approval workflow in v1). Keyed by (sourceType, sourceId) back to the kanji /
+// vocabulary / grammar item — no FK since `sourceId` spans three tables.
+
+export const generatedExampleSentences = pgTable(
+  'generated_example_sentences',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    sourceType: text('source_type', {
+      enum: ['kanji', 'vocabulary', 'grammar'],
+    }).notNull(),
+    sourceId: text('source_id').notNull(),
+    promptVersion: text('prompt_version').notNull().default('v1'),
+    modelName: text('model_name').notNull(),
+    sentenceJa: text('sentence_ja').notNull(),
+    sentenceReading: text('sentence_reading'),
+    sentenceTranslationEn: text('sentence_translation_en'),
+    status: text('status', { enum: ['pending', 'approved', 'rejected'] })
+      .notNull()
+      .default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index('idx_gen_source').on(t.sourceType, t.sourceId)],
+)

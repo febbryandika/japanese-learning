@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
+import type { GeneratedExample } from '@/services/ai.service'
 import type {
   GrammarDetail,
   GrammarExample,
@@ -10,11 +11,14 @@ import type {
 import type { JlptLevel, ProgressState } from '@/lib/validations'
 
 export type { GrammarDetail, GrammarExample, GrammarListItem }
+export { useGenerateExample } from '@/hooks/use-generate-example'
 
-// The detail route augments the grammar item with the caller's bookmark and progress state.
+// The detail route augments the grammar item with the caller's bookmark and
+// progress state plus any AI-generated example sentences.
 export type GrammarDetailResponse = GrammarDetail & {
   isBookmarked: boolean
   progressState: ProgressState
+  generatedExamples: GeneratedExample[]
 }
 
 export type GrammarListResponse = {
