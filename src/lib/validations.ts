@@ -304,3 +304,14 @@ export const examReviewResponseSchema = z.object({
 export type ExamReviewQuestion = z.infer<typeof examReviewQuestionSchema>
 export type ExamReviewSectionScore = z.infer<typeof examReviewSectionScoreSchema>
 export type ExamReviewResponse = z.infer<typeof examReviewResponseSchema>
+
+// ─── Reader ─────────────────────────────────────────────────────────────────
+
+// PATCH /api/reader/books/[bookId]/progress — save the epubjs CFI for the
+// current reading position. `cfi` is an opaque epubjs string (existence of the
+// book is checked in the service); a non-empty value is all we validate here.
+export const updateReaderProgressSchema = z.object({
+  cfi: z.string().min(1),
+})
+
+export type UpdateReaderProgressInput = z.infer<typeof updateReaderProgressSchema>

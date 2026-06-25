@@ -317,3 +317,41 @@ export const generatedExampleSentences = pgTable(
   },
   (t) => [index('idx_gen_source').on(t.sourceType, t.sourceId)],
 )
+
+// ─── Epub Reader ────────────────────────────────────────────────────────────
+// Light-novel library. Files are seeded (served from /public) or uploaded to
+// Vercel Blob; only published books are visible to learners.
+
+export const epubBooks = pgTable('epub_books', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  title: text('title').notNull(),
+  author: text('author'),
+  fileUrl: text('file_url').notNull(),
+  coverUrl: text('cover_url'),
+  isPublished: boolean('is_published').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+})
+
+// One row per (user, book): the exact reading position as an epubjs CFI string.
+// Upserted on the `uq_reader_progress` constraint as the user turns pages.
+export const readerProgress = pgTable(
+  'reader_progress',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text('user_id').notNull(),
+    bookId: text('book_id')
+      .notNull()
+      .references(() => epubBooks.id, { onDelete: 'cascade' }),
+    cfi: text('cfi'),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [unique('uq_reader_progress').on(t.userId, t.bookId)],
+)

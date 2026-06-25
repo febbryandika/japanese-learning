@@ -16,6 +16,7 @@
     "db:seed:vocabulary": "tsx scripts/seed-vocabulary.ts",
     "db:seed:grammar": "tsx scripts/seed-grammar.ts",
     "db:seed:mock-exams": "tsx scripts/seed-mock-exams.ts",
+    "db:seed:books": "tsx scripts/seed-books.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
@@ -32,6 +33,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
+    "epubjs": "^0.3.93",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "next-themes": "^0.4.6",
