@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
+import type { GeneratedExample } from '@/services/ai.service'
 import type {
   VocabularyDetail,
   VocabularyListItem,
@@ -9,11 +10,14 @@ import type {
 import type { ProgressState, VocabPartOfSpeech } from '@/lib/validations'
 
 export type { VocabularyDetail, VocabularyListItem }
+export { useGenerateExample } from '@/hooks/use-generate-example'
 
-// The detail route augments the vocabulary with the caller's bookmark and progress state.
+// The detail route augments the vocabulary with the caller's bookmark and
+// progress state plus any AI-generated example sentences.
 export type VocabularyDetailResponse = VocabularyDetail & {
   isBookmarked: boolean
   progressState: ProgressState
+  generatedExamples: GeneratedExample[]
 }
 
 export type VocabularyListResponse = {

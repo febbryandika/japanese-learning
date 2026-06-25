@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { useKanjiDetail } from '@/hooks/use-kanji'
 import { useUpdateProgress } from '@/hooks/use-progress'
+import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
@@ -108,6 +109,12 @@ export function KanjiDetailView({ id }: { id: string }) {
           </ul>
         )}
       </section>
+
+      <AIExampleBlock
+        targetType="kanji"
+        targetId={kanji.id}
+        examples={kanji.generatedExamples}
+      />
     </article>
   )
 }

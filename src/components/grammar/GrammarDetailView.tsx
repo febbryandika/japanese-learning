@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { useGrammarDetail } from '@/hooks/use-grammar'
 import { useUpdateProgress } from '@/hooks/use-progress'
+import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
@@ -108,6 +109,12 @@ export function GrammarDetailView({ id }: { id: string }) {
           </p>
         )}
       </Section>
+
+      <AIExampleBlock
+        targetType="grammar"
+        targetId={grammar.id}
+        examples={grammar.generatedExamples}
+      />
     </article>
   )
 }

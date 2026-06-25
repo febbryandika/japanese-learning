@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { useVocabularyDetail } from '@/hooks/use-vocabulary'
 import { useUpdateProgress } from '@/hooks/use-progress'
+import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
@@ -120,6 +121,12 @@ export function VocabularyDetailView({ id }: { id: string }) {
           </p>
         )}
       </section>
+
+      <AIExampleBlock
+        targetType="vocabulary"
+        targetId={vocab.id}
+        examples={vocab.generatedExamples}
+      />
     </article>
   )
 }
