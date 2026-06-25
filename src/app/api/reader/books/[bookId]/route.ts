@@ -13,7 +13,7 @@ export async function GET(
   }
 
   const { bookId } = await params
-  const book = await getBookDetail(bookId)
+  const book = await getBookDetail(session.user.id, bookId)
   if (!book) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }

@@ -13,13 +13,15 @@ export type BookListItem = {
   cfi: string | null
 }
 
-// Everything the reader needs to render a book: metadata + the file to load.
+// Everything the reader needs to render a book: metadata, the file to load, and
+// the caller's saved reading position (cfi) so it can restore on open.
 export type BookDetail = {
   id: string
   title: string
   author: string | null
   fileUrl: string
   coverUrl: string | null
+  cfi: string | null
 }
 
 // All published books, newest first, each enriched with the caller's reading
@@ -47,9 +49,13 @@ export async function listPublishedBooks(
     .orderBy(desc(epubBooks.createdAt))
 }
 
-// A single published book's metadata + file URL, or null when it doesn't exist
-// or isn't published (→ 404).
-export async function getBookDetail(bookId: string): Promise<BookDetail | null> {
+// A single published book's metadata + file URL + the caller's saved reading
+// position (cfi, null if unread). Returns null when the book doesn't exist or
+// isn't published (→ 404). Scoped to `userId`.
+export async function getBookDetail(
+  userId: string,
+  bookId: string,
+): Promise<BookDetail | null> {
   const [row] = await db
     .select({
       id: epubBooks.id,
@@ -57,34 +63,20 @@ export async function getBookDetail(bookId: string): Promise<BookDetail | null> 
       author: epubBooks.author,
       fileUrl: epubBooks.fileUrl,
       coverUrl: epubBooks.coverUrl,
+      cfi: readerProgress.cfi,
     })
     .from(epubBooks)
+    .leftJoin(
+      readerProgress,
+      and(
+        eq(readerProgress.bookId, epubBooks.id),
+        eq(readerProgress.userId, userId),
+      ),
+    )
     .where(and(eq(epubBooks.id, bookId), eq(epubBooks.isPublished, true)))
     .limit(1)
 
   return row ?? null
-}
-
-// The caller's saved reading position for a book. Returns null when the book is
-// missing/unpublished (→ 404); `{ cfi: null }` when the book exists but the user
-// hasn't read it yet. Scoped to `userId`.
-export async function getReaderProgress(
-  userId: string,
-  bookId: string,
-): Promise<{ cfi: string | null } | null> {
-  if (!(await bookExists(bookId))) {
-    return null
-  }
-
-  const [row] = await db
-    .select({ cfi: readerProgress.cfi })
-    .from(readerProgress)
-    .where(
-      and(eq(readerProgress.userId, userId), eq(readerProgress.bookId, bookId)),
-    )
-    .limit(1)
-
-  return { cfi: row?.cfi ?? null }
 }
 
 // Upsert the caller's reading position (keyed on `uq_reader_progress`). Returns

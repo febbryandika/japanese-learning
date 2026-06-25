@@ -24,7 +24,8 @@ const SAVE_DEBOUNCE_MS = 800
 
 export function ReaderView({ bookId }: { bookId: string }) {
   const book = useBook(bookId)
-  const progress = useReaderProgress(bookId)
+  // Restore point, read from the book-detail cache (populated by useBook).
+  const savedCfi = useReaderProgress(bookId)
   const saveProgress = useSaveReaderProgress()
   const fontSize = useReaderSettings((s) => s.fontSize)
   const theme = useReaderSettings((s) => s.theme)
@@ -88,9 +89,9 @@ export function ReaderView({ bookId }: { bookId: string }) {
     }
   }, [flushSave])
 
-  // Wait for both metadata and the saved position before mounting the reader so
-  // the initial CFI is correct (the reader rebuilds if its restore point changes).
-  if (book.isPending || progress.isPending) {
+  // Wait for the book detail (which carries the saved CFI) before mounting the
+  // reader so the initial restore point is correct.
+  if (book.isPending) {
     return <ReaderSkeleton />
   }
 
@@ -102,7 +103,7 @@ export function ReaderView({ bookId }: { bookId: string }) {
     )
   }
 
-  const initialCfi = progress.data?.cfi ?? null
+  const initialCfi = savedCfi
 
   return (
     <div className="flex h-[100dvh] flex-col">

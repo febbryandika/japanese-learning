@@ -46,7 +46,6 @@ vi.mock('@/lib/db', () => ({ db: dbMock }))
 
 import {
   getBookDetail,
-  getReaderProgress,
   listPublishedBooks,
   saveReaderProgress,
 } from '@/services/reader.service'
@@ -68,36 +67,22 @@ describe('listPublishedBooks', () => {
 })
 
 describe('getBookDetail', () => {
-  it('returns the book when found', async () => {
-    const book = { id: 'b1', title: 'A', author: null, fileUrl: '/a.epub', coverUrl: null }
+  it('returns the book joined with the caller cfi when found', async () => {
+    const book = {
+      id: 'b1',
+      title: 'A',
+      author: null,
+      fileUrl: '/a.epub',
+      coverUrl: null,
+      cfi: 'epubcfi(/6/4)',
+    }
     queueSelect([book])
-    await expect(getBookDetail('b1')).resolves.toEqual(book)
+    await expect(getBookDetail('user-1', 'b1')).resolves.toEqual(book)
   })
 
   it('returns null when the book is missing or unpublished', async () => {
     queueSelect([])
-    await expect(getBookDetail('missing')).resolves.toBeNull()
-  })
-})
-
-describe('getReaderProgress', () => {
-  it('returns the saved cfi when the book exists', async () => {
-    queueSelect([{ id: 'b1' }]) // bookExists
-    queueSelect([{ cfi: 'epubcfi(/6/4)' }]) // progress row
-    await expect(getReaderProgress('user-1', 'b1')).resolves.toEqual({
-      cfi: 'epubcfi(/6/4)',
-    })
-  })
-
-  it('returns { cfi: null } when the book exists but is unread', async () => {
-    queueSelect([{ id: 'b1' }]) // bookExists
-    queueSelect([]) // no progress row
-    await expect(getReaderProgress('user-1', 'b1')).resolves.toEqual({ cfi: null })
-  })
-
-  it('returns null when the book does not exist', async () => {
-    queueSelect([]) // bookExists → false
-    await expect(getReaderProgress('user-1', 'missing')).resolves.toBeNull()
+    await expect(getBookDetail('user-1', 'missing')).resolves.toBeNull()
   })
 })
 

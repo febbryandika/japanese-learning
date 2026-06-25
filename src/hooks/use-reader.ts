@@ -5,8 +5,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { BookDetail, BookListItem } from '@/services/reader.service'
 
 type BooksResponse = { data: BookListItem[] }
-type ReaderProgressResponse = { cfi: string | null }
 type SaveProgressResponse = { cfi: string | null; updatedAt: string }
+
+function bookKey(bookId: string) {
+  return ['reader', 'book', bookId] as const
+}
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
@@ -25,31 +28,30 @@ export function useBooks() {
   })
 }
 
-// A single book's metadata + file URL (the reader needs both before mounting).
+// A single book's metadata + file URL + the caller's saved CFI (per SPEC: the
+// book-detail response carries everything needed to open and restore).
 export function useBook(bookId: string) {
   return useQuery({
-    queryKey: ['reader', 'book', bookId],
+    queryKey: bookKey(bookId),
     queryFn: () => fetchJson<BookDetail>(`/api/reader/books/${bookId}`),
     enabled: Boolean(bookId),
   })
 }
 
-// The caller's stored reading position, fetched once so the reader can restore
-// it on open. Not refetched while reading — the client owns the live CFI.
-export function useReaderProgress(bookId: string) {
-  return useQuery({
-    queryKey: ['reader', 'progress', bookId],
-    queryFn: () =>
-      fetchJson<ReaderProgressResponse>(
-        `/api/reader/books/${bookId}/progress`,
-      ),
-    enabled: Boolean(bookId),
-    staleTime: Infinity,
+// The caller's stored reading position, read straight from the book-detail cache
+// (no extra request). `enabled: false` → this observer never fetches; it returns
+// the cfi loaded by useBook and updated by useSaveReaderProgress.
+export function useReaderProgress(bookId: string): string | null {
+  const { data } = useQuery({
+    queryKey: bookKey(bookId),
+    queryFn: () => fetchJson<BookDetail>(`/api/reader/books/${bookId}`),
+    enabled: false,
   })
+  return data?.cfi ?? null
 }
 
-// Persist the current CFI. Callers debounce this. On success we seed the
-// progress cache so a remount restores the latest position without a refetch.
+// Persist the current CFI. Callers debounce this. On success we update the cfi
+// in the book-detail cache so a remount restores the latest position.
 export function useSaveReaderProgress() {
   const queryClient = useQueryClient()
 
@@ -66,9 +68,8 @@ export function useSaveReaderProgress() {
       return res.json() as Promise<SaveProgressResponse>
     },
     onSuccess: (data, { bookId }) => {
-      queryClient.setQueryData<ReaderProgressResponse>(
-        ['reader', 'progress', bookId],
-        { cfi: data.cfi },
+      queryClient.setQueryData<BookDetail>(bookKey(bookId), (old) =>
+        old ? { ...old, cfi: data.cfi } : old,
       )
     },
   })
