@@ -206,3 +206,83 @@ export const bookmarks = pgTable(
     index('idx_bookmarks_user').on(t.userId, t.targetType),
   ],
 )
+
+// ─── Mock Exams ─────────────────────────────────────────────────────────────
+// A timed, section-based multiple-choice exam. Questions cascade on exam delete.
+// Attempts are per user; answers cascade on attempt delete. Scoring is
+// server-authoritative and transactional (see exam.service `submitAttempt`).
+
+export const mockExams = pgTable('mock_exams', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  title: text('title').notNull(),
+  description: text('description'),
+  timeLimitMinutes: integer('time_limit_minutes').notNull().default(90),
+  isPublished: boolean('is_published').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+})
+
+export const mockExamQuestions = pgTable(
+  'mock_exam_questions',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    examId: text('exam_id')
+      .notNull()
+      .references(() => mockExams.id, { onDelete: 'cascade' }),
+    sectionName: text('section_name').notNull(), // "文法", "語彙", "読解", "聴解"
+    prompt: text('prompt').notNull(),
+    choices: text('choices').notNull(), // JSON: string[]
+    correctAnswer: text('correct_answer').notNull(), // server-only; never sent to client
+    explanation: text('explanation'),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (t) => [index('idx_questions_exam').on(t.examId)],
+)
+
+export const mockExamAttempts = pgTable(
+  'mock_exam_attempts',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text('user_id').notNull(),
+    examId: text('exam_id')
+      .notNull()
+      .references(() => mockExams.id),
+    startedAt: timestamp('started_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }),
+    scoreTotal: integer('score_total'),
+    scoreMax: integer('score_max'),
+    status: text('status', { enum: ['in_progress', 'submitted'] })
+      .notNull()
+      .default('in_progress'),
+  },
+  (t) => [index('idx_attempts_user').on(t.userId, t.examId)],
+)
+
+export const mockExamAttemptAnswers = pgTable(
+  'mock_exam_attempt_answers',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    attemptId: text('attempt_id')
+      .notNull()
+      .references(() => mockExamAttempts.id, { onDelete: 'cascade' }),
+    questionId: text('question_id')
+      .notNull()
+      .references(() => mockExamQuestions.id),
+    userAnswer: text('user_answer').notNull(),
+    isCorrect: boolean('is_correct').notNull(),
+  },
+  // One answer row per (attempt, question) — lets PATCH/submit upsert via
+  // onConflictDoUpdate as the user revises answers.
+  (t) => [unique('uq_attempt_answer').on(t.attemptId, t.questionId)],
+)
