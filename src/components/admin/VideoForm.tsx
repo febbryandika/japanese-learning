@@ -139,7 +139,8 @@ function VideoFormInner({
           placeholder="https://drive.google.com/…"
           aria-invalid={Boolean(errors.embedUrl)}
           {...register('embedUrl', {
-            setValueAs: (v) => (v === '' || v == null ? undefined : v),
+            // Blank → null clears the column; a value sets it (RFC 7396).
+            setValueAs: (v) => (v === '' || v == null ? null : v),
           })}
         />
         {errors.embedUrl ? (
@@ -155,7 +156,7 @@ function VideoFormInner({
           id="v-desc"
           rows={3}
           {...register('description', {
-            setValueAs: (v) => (v === '' || v == null ? undefined : v),
+            setValueAs: (v) => (v === '' || v == null ? null : v),
           })}
         />
       </div>
@@ -169,7 +170,7 @@ function VideoFormInner({
             inputMode="numeric"
             aria-invalid={Boolean(errors.durationSeconds)}
             {...register('durationSeconds', {
-              setValueAs: (v) => (v === '' || v == null ? undefined : Number(v)),
+              setValueAs: (v) => (v === '' || v == null ? null : Number(v)),
             })}
           />
           {errors.durationSeconds ? (

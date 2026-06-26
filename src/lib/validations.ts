@@ -374,12 +374,15 @@ export type UpdateLessonGroupInput = z.infer<typeof updateLessonGroupSchema>
 export type CreateLessonGroupFormValues = z.input<typeof createLessonGroupSchema>
 
 // Video lessons. `lessonGroupId` references an existing group (FK enforced in DB).
+// Optional fields are nullable (`.nullish()`): a blank form field sends `null` to
+// clear the column, while omitting it leaves the value unchanged (RFC 7396 merge
+// patch). Applies to create too so the form's clear→null mapping is uniform.
 export const createVideoSchema = z.object({
   lessonGroupId: z.string().min(1),
   title: z.string().min(1).max(200),
-  description: z.string().max(2000).optional(),
-  embedUrl: z.url().optional(),
-  durationSeconds: z.number().int().min(0).max(86_400).optional(),
+  description: z.string().max(2000).nullish(),
+  embedUrl: z.url().nullish(),
+  durationSeconds: z.number().int().min(0).max(86_400).nullish(),
   sortOrder: z.number().int().min(0).default(0),
   isPublished: z.boolean().default(false),
 })
@@ -387,9 +390,9 @@ export const createVideoSchema = z.object({
 export const updateVideoSchema = z.object({
   lessonGroupId: z.string().min(1).optional(),
   title: z.string().min(1).max(200).optional(),
-  description: z.string().max(2000).optional(),
-  embedUrl: z.url().optional(),
-  durationSeconds: z.number().int().min(0).max(86_400).optional(),
+  description: z.string().max(2000).nullish(),
+  embedUrl: z.url().nullish(),
+  durationSeconds: z.number().int().min(0).max(86_400).nullish(),
   sortOrder: z.number().int().min(0).optional(),
   isPublished: z.boolean().optional(),
 })
