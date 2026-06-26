@@ -315,3 +315,14 @@ export const updateReaderProgressSchema = z.object({
 })
 
 export type UpdateReaderProgressInput = z.infer<typeof updateReaderProgressSchema>
+
+// ─── Lookup ───────────────────────────────────────────────────────────────────
+
+// GET /api/lookup?q=… — reader word lookup. `q` is the selected text (already
+// trimmed client-side); we trim again and cap the length so a stray long
+// selection can't drive an oversized query.
+export const lookupQuerySchema = z.object({
+  q: z.string().trim().min(1).max(64),
+})
+
+export type LookupQuery = z.infer<typeof lookupQuerySchema>

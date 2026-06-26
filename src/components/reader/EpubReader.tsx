@@ -24,6 +24,17 @@ type EpubReaderProps = {
   onReady: (controls: ReaderControls, toc: TocItem[]) => void
   onRelocated: (cfi: string, percentage: number) => void
   onError: () => void
+  // Fires when the reader has a non-empty text selection, with the selected text
+  // and the viewport coordinates (bottom-center of the selection) to anchor a
+  // lookup popover to.
+  onTextSelected: (text: string, point: { x: number; y: number }) => void
+}
+
+// Minimal shape of the epubjs Contents object passed to the `selected` event —
+// enough to read the live selection and the iframe's position.
+type SelectionContents = {
+  window: Window
+  document: Document
 }
 
 const THEME_STYLES: Record<ReaderTheme, { background: string; color: string }> = {
@@ -44,6 +55,7 @@ export function EpubReader({
   onReady,
   onRelocated,
   onError,
+  onTextSelected,
 }: EpubReaderProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const renditionRef = useRef<Rendition | null>(null)
@@ -57,10 +69,12 @@ export function EpubReader({
   const onReadyRef = useRef(onReady)
   const onRelocatedRef = useRef(onRelocated)
   const onErrorRef = useRef(onError)
+  const onTextSelectedRef = useRef(onTextSelected)
   useEffect(() => {
     onReadyRef.current = onReady
     onRelocatedRef.current = onRelocated
     onErrorRef.current = onError
+    onTextSelectedRef.current = onTextSelected
   })
 
   useEffect(() => {
@@ -117,6 +131,23 @@ export function EpubReader({
           reportLocation(location.start.cfi)
         })
         rendition.on('keyup', (event: KeyboardEvent) => handleKey(event, rendition))
+
+        // Text selection inside the epub iframe → report the text + the selection
+        // position (in top-window viewport coords) so a lookup popover can anchor
+        // to it. epubjs debounces this on selectionchange, so it fires once the
+        // selection settles. `_cfiRange` (the selection's CFI) is unused here.
+        rendition.on('selected', (_cfiRange: string, contents: SelectionContents) => {
+          const selection = contents.window.getSelection()
+          const text = selection?.toString().trim() ?? ''
+          if (!text || !selection || selection.rangeCount === 0) return
+
+          const rect = selection.getRangeAt(0).getBoundingClientRect()
+          const frame = contents.document.defaultView?.frameElement?.getBoundingClientRect()
+          onTextSelectedRef.current(text, {
+            x: (frame?.left ?? 0) + rect.left + rect.width / 2,
+            y: (frame?.top ?? 0) + rect.bottom,
+          })
+        })
 
         // Generate locations in the background so the progress % is accurate;
         // refresh the current position once they're ready.
