@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { getServerSession } from '@/lib/auth'
+import { getServerSession, getUserRole } from '@/lib/auth'
 import { LogoutButton } from '@/components/LogoutButton'
 import { DashboardView } from '@/components/dashboard/DashboardView'
 
@@ -22,6 +22,14 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
+  // Admins get an extra nav entry into the content-management area. The role is
+  // resolved server-side so a learner never sees (or flashes) the link.
+  const role = await getUserRole(session.user.id)
+  const navLinks =
+    role === 'admin'
+      ? [...NAV_LINKS, { href: '/admin', label: 'Admin' }]
+      : NAV_LINKS
+
   return (
     <main className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -35,7 +43,7 @@ export default async function DashboardPage() {
       </header>
 
       <nav className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-medium">
-        {NAV_LINKS.map((link) => (
+        {navLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
