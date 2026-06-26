@@ -400,3 +400,81 @@ export const updateVideoSchema = z.object({
 export type CreateVideoInput = z.infer<typeof createVideoSchema>
 export type UpdateVideoInput = z.infer<typeof updateVideoSchema>
 export type CreateVideoFormValues = z.input<typeof createVideoSchema>
+
+// Kanji (SPEC §9). `character` is unique (DB). Nullable optionals use `.nullish()`
+// so a blank form field clears the column (merge-patch). `notes` holds a
+// JSON-stringified compound list — capped well above SPEC's 1000 to fit real seed
+// data (a kanji can have many compounds).
+export const createKanjiSchema = z.object({
+  character: z.string().length(1),
+  onyomi: z.string().max(200).nullish(),
+  kunyomi: z.string().max(200).nullish(),
+  meaning: z.string().min(1).max(300),
+  strokeCount: z.number().int().min(1).max(30).nullish(),
+  jlptLevel: z.enum(JLPT_LEVELS).default('N2'),
+  notes: z.string().max(8000).nullish(),
+})
+
+export const updateKanjiSchema = z.object({
+  character: z.string().length(1).optional(),
+  onyomi: z.string().max(200).nullish(),
+  kunyomi: z.string().max(200).nullish(),
+  meaning: z.string().min(1).max(300).optional(),
+  strokeCount: z.number().int().min(1).max(30).nullish(),
+  jlptLevel: z.enum(JLPT_LEVELS).optional(),
+  notes: z.string().max(8000).nullish(),
+})
+
+export type CreateKanjiInput = z.infer<typeof createKanjiSchema>
+export type UpdateKanjiInput = z.infer<typeof updateKanjiSchema>
+export type CreateKanjiFormValues = z.input<typeof createKanjiSchema>
+
+// Vocabulary (SPEC §9). No unique constraint.
+export const createVocabularySchema = z.object({
+  word: z.string().min(1).max(100),
+  reading: z.string().min(1).max(200),
+  meaning: z.string().min(1).max(500),
+  partOfSpeech: z.enum(VOCAB_PARTS_OF_SPEECH).nullish(),
+  jlptLevel: z.enum(JLPT_LEVELS).default('N2'),
+  notes: z.string().max(1000).nullish(),
+  exampleSentenceOriginal: z.string().max(500).nullish(),
+  exampleSentenceTranslation: z.string().max(500).nullish(),
+})
+
+export const updateVocabularySchema = z.object({
+  word: z.string().min(1).max(100).optional(),
+  reading: z.string().min(1).max(200).optional(),
+  meaning: z.string().min(1).max(500).optional(),
+  partOfSpeech: z.enum(VOCAB_PARTS_OF_SPEECH).nullish(),
+  jlptLevel: z.enum(JLPT_LEVELS).optional(),
+  notes: z.string().max(1000).nullish(),
+  exampleSentenceOriginal: z.string().max(500).nullish(),
+  exampleSentenceTranslation: z.string().max(500).nullish(),
+})
+
+export type CreateVocabularyInput = z.infer<typeof createVocabularySchema>
+export type UpdateVocabularyInput = z.infer<typeof updateVocabularySchema>
+export type CreateVocabularyFormValues = z.input<typeof createVocabularySchema>
+
+// Grammar (SPEC §9). No unique constraint; deleting cascades grammar_examples.
+export const createGrammarSchema = z.object({
+  pattern: z.string().min(1).max(200),
+  meaning: z.string().min(1).max(500),
+  formation: z.string().max(1000).nullish(),
+  usageNotes: z.string().max(2000).nullish(),
+  commonMistakes: z.string().max(1000).nullish(),
+  jlptLevel: z.enum(JLPT_LEVELS).default('N2'),
+})
+
+export const updateGrammarSchema = z.object({
+  pattern: z.string().min(1).max(200).optional(),
+  meaning: z.string().min(1).max(500).optional(),
+  formation: z.string().max(1000).nullish(),
+  usageNotes: z.string().max(2000).nullish(),
+  commonMistakes: z.string().max(1000).nullish(),
+  jlptLevel: z.enum(JLPT_LEVELS).optional(),
+})
+
+export type CreateGrammarInput = z.infer<typeof createGrammarSchema>
+export type UpdateGrammarInput = z.infer<typeof updateGrammarSchema>
+export type CreateGrammarFormValues = z.input<typeof createGrammarSchema>
