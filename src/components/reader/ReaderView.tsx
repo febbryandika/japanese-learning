@@ -13,6 +13,7 @@ import {
 import { ReaderToolbar } from '@/components/reader/ReaderToolbar'
 import { ReaderSettings } from '@/components/reader/ReaderSettings'
 import { ReaderNavigation } from '@/components/reader/ReaderNavigation'
+import { LookupPopover } from '@/components/reader/LookupPopover'
 import {
   useBook,
   useReaderProgress,
@@ -34,6 +35,10 @@ export function ReaderView({ bookId }: { bookId: string }) {
   const [ready, setReady] = useState(false)
   const [toc, setToc] = useState<TocItem[]>([])
   const [percentage, setPercentage] = useState(0)
+  // The active word-lookup popover: the normalized query + where to anchor it.
+  const [lookup, setLookup] = useState<{ q: string; x: number; y: number } | null>(
+    null,
+  )
 
   const controlsRef = useRef<ReaderControls | null>(null)
   const pendingCfi = useRef<string | null>(null)
@@ -61,6 +66,8 @@ export function ReaderView({ bookId }: { bookId: string }) {
   const handleRelocated = useCallback(
     (cfi: string, pct: number) => {
       setPercentage(pct)
+      // A page/chapter turn invalidates the selection the popover anchored to.
+      setLookup(null)
       pendingCfi.current = cfi
       if (saveTimer.current) clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS)
@@ -126,6 +133,10 @@ export function ReaderView({ bookId }: { bookId: string }) {
           onReady={handleReady}
           onRelocated={handleRelocated}
           onError={() => toast.error('This book could not be opened.')}
+          onTextSelected={(text, point) => {
+            const q = normalizeSelection(text)
+            if (q) setLookup({ q, x: point.x, y: point.y })
+          }}
         />
       </div>
 
@@ -137,8 +148,27 @@ export function ReaderView({ bookId }: { bookId: string }) {
         onNext={() => controlsRef.current?.next()}
         onSelectChapter={(href) => controlsRef.current?.goTo(href)}
       />
+
+      {lookup && (
+        <LookupPopover
+          query={lookup.q}
+          x={lookup.x}
+          y={lookup.y}
+          onClose={() => setLookup(null)}
+        />
+      )}
     </div>
   )
+}
+
+// Strip surrounding whitespace + punctuation (JP and ASCII) from a raw selection
+// and cap its length, so a tap that grabs a trailing 、 or a long drag still
+// produces a sane lookup query (empty → no popover).
+const SELECTION_TRIM =
+  /^[\s。、！？「」『』（）()【】、，．・…"'!?,.]+|[\s。、！？「」『』（）()【】、，．・…"'!?,.]+$/g
+
+function normalizeSelection(text: string): string {
+  return text.replace(SELECTION_TRIM, '').slice(0, 24)
 }
 
 function ReaderSkeleton() {
