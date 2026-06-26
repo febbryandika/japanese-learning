@@ -326,3 +326,77 @@ export const lookupQuerySchema = z.object({
 })
 
 export type LookupQuery = z.infer<typeof lookupQuerySchema>
+
+// ─── Admin (Phase 5) ──────────────────────────────────────────────────────────
+
+// Shared query for every admin list route: free-text search + bounded paging.
+// Unlike the learner list schemas, admin lists never filter by publish state.
+export const adminListQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+})
+
+export type AdminListQuery = z.infer<typeof adminListQuerySchema>
+
+// Update schemas are authored as their own all-optional objects (no defaults) so
+// a PATCH that omits a field leaves it unchanged — `.partial()` of a schema with
+// `.default()` would silently reset omitted fields.
+
+// Lesson groups. `slug` is unique (DB) and URL-safe.
+export const createLessonGroupSchema = z.object({
+  slug: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, and hyphens only'),
+  title: z.string().min(1).max(200),
+  sortOrder: z.number().int().min(0).default(0),
+  isPublished: z.boolean().default(false),
+})
+
+export const updateLessonGroupSchema = z.object({
+  slug: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, and hyphens only')
+    .optional(),
+  title: z.string().min(1).max(200).optional(),
+  sortOrder: z.number().int().min(0).optional(),
+  isPublished: z.boolean().optional(),
+})
+
+export type CreateLessonGroupInput = z.infer<typeof createLessonGroupSchema>
+export type UpdateLessonGroupInput = z.infer<typeof updateLessonGroupSchema>
+// Pre-default (input) shape — used as the react-hook-form field-values type so a
+// defaulted field can be omitted from the form's initial values.
+export type CreateLessonGroupFormValues = z.input<typeof createLessonGroupSchema>
+
+// Video lessons. `lessonGroupId` references an existing group (FK enforced in DB).
+// Optional fields are nullable (`.nullish()`): a blank form field sends `null` to
+// clear the column, while omitting it leaves the value unchanged (RFC 7396 merge
+// patch). Applies to create too so the form's clear→null mapping is uniform.
+export const createVideoSchema = z.object({
+  lessonGroupId: z.string().min(1),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).nullish(),
+  embedUrl: z.url().nullish(),
+  durationSeconds: z.number().int().min(0).max(86_400).nullish(),
+  sortOrder: z.number().int().min(0).default(0),
+  isPublished: z.boolean().default(false),
+})
+
+export const updateVideoSchema = z.object({
+  lessonGroupId: z.string().min(1).optional(),
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).nullish(),
+  embedUrl: z.url().nullish(),
+  durationSeconds: z.number().int().min(0).max(86_400).nullish(),
+  sortOrder: z.number().int().min(0).optional(),
+  isPublished: z.boolean().optional(),
+})
+
+export type CreateVideoInput = z.infer<typeof createVideoSchema>
+export type UpdateVideoInput = z.infer<typeof updateVideoSchema>
+export type CreateVideoFormValues = z.input<typeof createVideoSchema>
