@@ -478,3 +478,59 @@ export const updateGrammarSchema = z.object({
 export type CreateGrammarInput = z.infer<typeof createGrammarSchema>
 export type UpdateGrammarInput = z.infer<typeof updateGrammarSchema>
 export type CreateGrammarFormValues = z.input<typeof createGrammarSchema>
+
+// Mock exams. `isPublished` gates learner visibility; `description` is clearable.
+export const createMockExamSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).nullish(),
+  timeLimitMinutes: z.number().int().min(1).max(600).default(90),
+  isPublished: z.boolean().default(false),
+})
+
+export const updateMockExamSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).nullish(),
+  timeLimitMinutes: z.number().int().min(1).max(600).optional(),
+  isPublished: z.boolean().optional(),
+})
+
+export type CreateMockExamInput = z.infer<typeof createMockExamSchema>
+export type UpdateMockExamInput = z.infer<typeof updateMockExamSchema>
+export type CreateMockExamFormValues = z.input<typeof createMockExamSchema>
+
+// Exam questions. `choices` is a 2–6 item list; `correctAnswer` must be one of
+// them (the answer key is stored as the choice text, matching the seed/scoring).
+export const examQuestionSchema = z
+  .object({
+    sectionName: z.enum(EXAM_SECTIONS),
+    prompt: z.string().min(1).max(2000),
+    choices: z.array(z.string().min(1).max(500)).min(2).max(6),
+    correctAnswer: z.string().min(1),
+    explanation: z.string().max(2000).nullish(),
+    sortOrder: z.number().int().min(0).default(0),
+  })
+  .refine((q) => q.choices.includes(q.correctAnswer), {
+    message: 'Correct answer must be one of the choices',
+    path: ['correctAnswer'],
+  })
+
+// `.partial()` strips the refine, so the update schema is authored explicitly and
+// re-applies the check only when both fields are present in the patch.
+export const updateExamQuestionSchema = z
+  .object({
+    sectionName: z.enum(EXAM_SECTIONS).optional(),
+    prompt: z.string().min(1).max(2000).optional(),
+    choices: z.array(z.string().min(1).max(500)).min(2).max(6).optional(),
+    correctAnswer: z.string().min(1).optional(),
+    explanation: z.string().max(2000).nullish(),
+    sortOrder: z.number().int().min(0).optional(),
+  })
+  .refine(
+    (q) =>
+      !(q.choices && q.correctAnswer) || q.choices.includes(q.correctAnswer),
+    { message: 'Correct answer must be one of the choices', path: ['correctAnswer'] },
+  )
+
+export type ExamQuestionInput = z.infer<typeof examQuestionSchema>
+export type UpdateExamQuestionInput = z.infer<typeof updateExamQuestionSchema>
+export type ExamQuestionFormValues = z.input<typeof examQuestionSchema>
