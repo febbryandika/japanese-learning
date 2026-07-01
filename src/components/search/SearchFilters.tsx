@@ -1,8 +1,5 @@
 'use client'
 
-import { Bookmark } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -10,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { BookmarkedToggle } from '@/components/BookmarkedToggle'
 import { PROGRESS_LABELS } from '@/components/ProgressBadge'
 import {
   JLPT_LEVELS,
@@ -91,16 +89,7 @@ export function SearchFilters({
           )
         }
       />
-      <Button
-        type="button"
-        variant={bookmarked ? 'default' : 'outline'}
-        size="sm"
-        aria-pressed={bookmarked}
-        onClick={() => onBookmarkedChange(!bookmarked)}
-      >
-        <Bookmark className="size-4" aria-hidden />
-        Bookmarked
-      </Button>
+      <BookmarkedToggle active={bookmarked} onToggle={onBookmarkedChange} />
     </div>
   )
 }

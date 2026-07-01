@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   const parsed = grammarListQuerySchema.safeParse({
     q: sp.get('q') ?? undefined,
     jlptLevel: sp.get('jlptLevel') ?? undefined,
+    progressState: sp.get('progressState') ?? undefined,
+    bookmarked: sp.get('bookmarked') ?? undefined,
     page: sp.get('page') ?? undefined,
     pageSize: sp.get('pageSize') ?? undefined,
   })
@@ -24,9 +26,12 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { q, jlptLevel, page, pageSize } = parsed.data
+  const { q, jlptLevel, progressState, bookmarked, page, pageSize } = parsed.data
   const [{ items, total }, jlptLevels] = await Promise.all([
-    listGrammar({ q, jlptLevel, page, pageSize }, session.user.id),
+    listGrammar(
+      { q, jlptLevel, progressState, bookmarked, page, pageSize },
+      session.user.id,
+    ),
     getJlptLevelOptions(),
   ])
 

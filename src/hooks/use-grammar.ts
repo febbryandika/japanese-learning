@@ -8,7 +8,11 @@ import type {
   GrammarExample,
   GrammarListItem,
 } from '@/services/grammar.service'
-import type { JlptLevel, ProgressState } from '@/lib/validations'
+import type {
+  JlptLevel,
+  ProgressState,
+  StudyProgressState,
+} from '@/lib/validations'
 
 export type { GrammarDetail, GrammarExample, GrammarListItem }
 export { useGenerateExample } from '@/hooks/use-generate-example'
@@ -35,6 +39,8 @@ export type GrammarListResponse = {
 export type GrammarListFilters = {
   q?: string
   jlptLevel?: JlptLevel
+  progressState?: StudyProgressState
+  bookmarked?: boolean
   page: number
   pageSize: number
 }
@@ -51,6 +57,8 @@ function buildGrammarListQuery(filters: GrammarListFilters): string {
   const params = new URLSearchParams()
   if (filters.q) params.set('q', filters.q)
   if (filters.jlptLevel) params.set('jlptLevel', filters.jlptLevel)
+  if (filters.progressState) params.set('progressState', filters.progressState)
+  if (filters.bookmarked) params.set('bookmarked', 'true')
   params.set('page', String(filters.page))
   params.set('pageSize', String(filters.pageSize))
   return params.toString()

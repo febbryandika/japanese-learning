@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react'
 
 import { useVideoLessons } from '@/hooks/use-videos'
 import { ProgressBadge } from '@/components/ProgressBadge'
-import { ErrorState } from '@/components/videos/ErrorState'
+import { ErrorState } from '@/components/ErrorState'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDuration } from '@/lib/utils'

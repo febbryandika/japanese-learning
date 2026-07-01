@@ -1,20 +1,7 @@
-import {
-  and,
-  asc,
-  count,
-  eq,
-  exists,
-  ilike,
-  isNull,
-  or,
-  sql,
-  type SQL,
-  type SQLWrapper,
-} from 'drizzle-orm'
+import { and, asc, count, eq, ilike, or, type SQL } from 'drizzle-orm'
 
 import { db } from '@/lib/db'
 import {
-  bookmarks,
   grammarItems,
   kanjiItems,
   lessonGroups,
@@ -22,12 +9,11 @@ import {
   vocabularyItems,
   videoLessons,
 } from '@/lib/db/schema'
-import type {
-  BookmarkTargetType,
-  JlptLevel,
-  ProgressState,
-  SearchType,
-} from '@/lib/validations'
+import type { JlptLevel, ProgressState, SearchType } from '@/lib/validations'
+import {
+  bookmarkedFilter,
+  progressStateFilter,
+} from '@/services/study-filters'
 import type { GrammarListItem } from '@/services/grammar.service'
 import type { KanjiListItem } from '@/services/kanji.service'
 import type { VocabularyListItem } from '@/services/vocabulary.service'
@@ -78,40 +64,6 @@ export type SearchParams = {
 // pageSize results.
 const PREVIEW_LIMIT = 6
 
-// Shared filter for the per-user studyProgress left join. `unseen` includes rows
-// with no progress row at all (a missing row means unseen).
-function progressFilter(state: ProgressState | undefined): SQL | undefined {
-  if (!state) return undefined
-  if (state === 'unseen') {
-    return or(
-      isNull(studyProgress.progressState),
-      eq(studyProgress.progressState, 'unseen'),
-    )
-  }
-  return eq(studyProgress.progressState, state)
-}
-
-// Correlated EXISTS against the caller's bookmarks — index-eligible on
-// uq_bookmark (userId, targetType, targetId), no join-type juggling / row fan-out.
-function bookmarkedFilter(
-  targetType: BookmarkTargetType,
-  targetId: SQLWrapper,
-  userId: string,
-): SQL {
-  return exists(
-    db
-      .select({ one: sql`1` })
-      .from(bookmarks)
-      .where(
-        and(
-          eq(bookmarks.userId, userId),
-          eq(bookmarks.targetType, targetType),
-          eq(bookmarks.targetId, targetId),
-        ),
-      ),
-  )
-}
-
 async function searchKanji(
   p: SearchParams,
   userId: string,
@@ -128,7 +80,7 @@ async function searchKanji(
     if (match) filters.push(match)
   }
   if (p.jlptLevel) filters.push(eq(kanjiItems.jlptLevel, p.jlptLevel))
-  const prog = progressFilter(p.progressState)
+  const prog = progressStateFilter(p.progressState)
   if (prog) filters.push(prog)
   if (p.bookmarked) {
     filters.push(bookmarkedFilter('kanji', kanjiItems.id, userId))
@@ -187,7 +139,7 @@ async function searchVocabulary(
     if (match) filters.push(match)
   }
   if (p.jlptLevel) filters.push(eq(vocabularyItems.jlptLevel, p.jlptLevel))
-  const prog = progressFilter(p.progressState)
+  const prog = progressStateFilter(p.progressState)
   if (prog) filters.push(prog)
   if (p.bookmarked) {
     filters.push(bookmarkedFilter('vocabulary', vocabularyItems.id, userId))
@@ -244,7 +196,7 @@ async function searchGrammar(
     if (match) filters.push(match)
   }
   if (p.jlptLevel) filters.push(eq(grammarItems.jlptLevel, p.jlptLevel))
-  const prog = progressFilter(p.progressState)
+  const prog = progressStateFilter(p.progressState)
   if (prog) filters.push(prog)
   if (p.bookmarked) {
     filters.push(bookmarkedFilter('grammar', grammarItems.id, userId))
@@ -305,7 +257,7 @@ async function searchVideo(
     )
     if (match) filters.push(match)
   }
-  const prog = progressFilter(p.progressState)
+  const prog = progressStateFilter(p.progressState)
   if (prog) filters.push(prog)
   if (p.bookmarked) {
     filters.push(bookmarkedFilter('video_lesson', videoLessons.id, userId))

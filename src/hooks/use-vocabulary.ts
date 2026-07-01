@@ -7,7 +7,11 @@ import type {
   VocabularyDetail,
   VocabularyListItem,
 } from '@/services/vocabulary.service'
-import type { ProgressState, VocabPartOfSpeech } from '@/lib/validations'
+import type {
+  ProgressState,
+  StudyProgressState,
+  VocabPartOfSpeech,
+} from '@/lib/validations'
 
 export type { VocabularyDetail, VocabularyListItem }
 export { useGenerateExample } from '@/hooks/use-generate-example'
@@ -33,6 +37,8 @@ export type VocabularyListResponse = {
 export type VocabularyListFilters = {
   q?: string
   partOfSpeech?: VocabPartOfSpeech
+  progressState?: StudyProgressState
+  bookmarked?: boolean
   page: number
   pageSize: number
 }
@@ -49,6 +55,8 @@ function buildVocabularyListQuery(filters: VocabularyListFilters): string {
   const params = new URLSearchParams()
   if (filters.q) params.set('q', filters.q)
   if (filters.partOfSpeech) params.set('partOfSpeech', filters.partOfSpeech)
+  if (filters.progressState) params.set('progressState', filters.progressState)
+  if (filters.bookmarked) params.set('bookmarked', 'true')
   params.set('page', String(filters.page))
   params.set('pageSize', String(filters.pageSize))
   return params.toString()

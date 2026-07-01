@@ -4,7 +4,11 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import type { GeneratedExample } from '@/services/ai.service'
 import type { KanjiDetail, KanjiListItem } from '@/services/kanji.service'
-import type { KanjiCompound, ProgressState } from '@/lib/validations'
+import type {
+  KanjiCompound,
+  ProgressState,
+  StudyProgressState,
+} from '@/lib/validations'
 
 export type { KanjiCompound, KanjiDetail, KanjiListItem }
 export { useGenerateExample } from '@/hooks/use-generate-example'
@@ -31,6 +35,8 @@ export type KanjiListResponse = {
 export type KanjiListFilters = {
   q?: string
   strokeCount?: number
+  progressState?: StudyProgressState
+  bookmarked?: boolean
   page: number
   pageSize: number
 }
@@ -49,6 +55,8 @@ function buildKanjiListQuery(filters: KanjiListFilters): string {
   if (filters.strokeCount != null) {
     params.set('strokeCount', String(filters.strokeCount))
   }
+  if (filters.progressState) params.set('progressState', filters.progressState)
+  if (filters.bookmarked) params.set('bookmarked', 'true')
   params.set('page', String(filters.page))
   params.set('pageSize', String(filters.pageSize))
   return params.toString()

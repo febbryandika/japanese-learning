@@ -1,14 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 import { useGrammarList } from '@/hooks/use-grammar'
-import type { JlptLevel } from '@/lib/validations'
+import { useListUrlState } from '@/hooks/use-list-url-state'
+import type { JlptLevel, StudyProgressState } from '@/lib/validations'
 import { GrammarCard } from '@/components/GrammarCard'
 import { PaginationControls } from '@/components/PaginationControls'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
+import { LoadingState } from '@/components/LoadingState'
+import { MasteryFilter } from '@/components/MasteryFilter'
+import { BookmarkedToggle } from '@/components/BookmarkedToggle'
 import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
   SelectContent,
@@ -20,16 +22,19 @@ import {
 const PAGE_SIZE = 24
 
 export function GrammarBrowser() {
-  const [search, setSearch] = useState('')
-  const [jlptLevel, setJlptLevel] = useState<JlptLevel | undefined>(undefined)
-  const [page, setPage] = useState(1)
+  const { q, searchInput, setSearchInput, page, setPage, getParam, setParam } =
+    useListUrlState()
 
-  const debouncedSearch = useDebouncedValue(search.trim(), 300)
+  const jlptLevel = getParam('jlptLevel') as JlptLevel | undefined
+  const progressState = getParam('progressState') as StudyProgressState | undefined
+  const bookmarked = getParam('bookmarked') === 'true'
 
   const { data, isPending, isError, isPlaceholderData, refetch } =
     useGrammarList({
-      q: debouncedSearch || undefined,
+      q: q || undefined,
       jlptLevel,
+      progressState,
+      bookmarked: bookmarked || undefined,
       page,
       pageSize: PAGE_SIZE,
     })
@@ -42,29 +47,24 @@ export function GrammarBrowser() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Input
           type="search"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            setPage(1)
-          }}
+          value={searchInput}
+          onChange={(event) => setSearchInput(event.target.value)}
           placeholder="Search by pattern or meaning"
           aria-label="Search grammar"
           className="sm:max-w-xs"
         />
         <Select
           items={levelItems}
-          value={jlptLevel == null ? 'all' : jlptLevel}
-          onValueChange={(value) => {
-            setJlptLevel(
-              value == null || value === 'all'
-                ? undefined
-                : (value as JlptLevel),
+          value={jlptLevel ?? 'all'}
+          onValueChange={(value) =>
+            setParam(
+              'jlptLevel',
+              value == null || value === 'all' ? undefined : value,
             )
-            setPage(1)
-          }}
+          }
         >
           <SelectTrigger className="w-48" aria-label="Filter by JLPT level">
             <SelectValue />
@@ -77,6 +77,16 @@ export function GrammarBrowser() {
             ))}
           </SelectContent>
         </Select>
+        <MasteryFilter
+          value={progressState}
+          onChange={(value) => setParam('progressState', value)}
+        />
+        <BookmarkedToggle
+          active={bookmarked}
+          onToggle={(active) =>
+            setParam('bookmarked', active ? 'true' : undefined)
+          }
+        />
       </div>
 
       <GrammarResults
@@ -107,7 +117,7 @@ function GrammarResults({
   onPageChange: (page: number) => void
 }) {
   if (isPending) {
-    return <CardGridSkeleton />
+    return <LoadingState count={9} />
   }
 
   if (isError || !data) {
@@ -115,9 +125,7 @@ function GrammarResults({
   }
 
   if (data.data.length === 0) {
-    return (
-      <p className="text-muted-foreground">No grammar matches your search.</p>
-    )
+    return <EmptyState message="No grammar matches your search." />
   }
 
   return (
@@ -140,26 +148,4 @@ function GrammarResults({
       />
     </div>
   )
-}
-
-function CardGridSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 9 }).map((_, index) => (
-        <Skeleton key={index} className="h-28 w-full rounded-xl" />
-      ))}
-    </div>
-  )
-}
-
-// Debounce the search box so typing doesn't fire a request per keystroke.
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value)
-
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delayMs)
-    return () => clearTimeout(id)
-  }, [value, delayMs])
-
-  return debounced
 }

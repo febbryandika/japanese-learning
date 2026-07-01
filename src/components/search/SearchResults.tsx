@@ -5,15 +5,16 @@ import { ChevronRight } from 'lucide-react'
 
 import type { SearchGroup, SearchResponse, SearchVideoItem } from '@/hooks/use-search'
 import type { SearchType } from '@/lib/validations'
+import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 import { GrammarCard } from '@/components/GrammarCard'
 import { KanjiCard } from '@/components/KanjiCard'
+import { LoadingState } from '@/components/LoadingState'
 import { PaginationControls } from '@/components/PaginationControls'
 import { ProgressBadge } from '@/components/ProgressBadge'
 import { VocabularyCard } from '@/components/VocabularyCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 
 const TYPE_LABELS: Record<SearchType, string> = {
   kanji: 'Kanji',
@@ -52,7 +53,7 @@ export function SearchResults({
   }
 
   if (isPending) {
-    return <ResultsSkeleton />
+    return <LoadingState />
   }
 
   if (isError || !data) {
@@ -61,7 +62,7 @@ export function SearchResults({
 
   const totalHits = data.groups.reduce((sum, group) => sum + group.items.length, 0)
   if (totalHits === 0) {
-    return <p className="text-muted-foreground">No results match your search.</p>
+    return <EmptyState message="No results match your search." />
   }
 
   const dim = isPlaceholderData ? 'opacity-60 transition-opacity' : ''
@@ -160,15 +161,5 @@ function SearchVideoCard({ video }: { video: SearchVideoItem }) {
         </CardContent>
       </Card>
     </Link>
-  )
-}
-
-function ResultsSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <Skeleton key={index} className="h-28 w-full rounded-xl" />
-      ))}
-    </div>
   )
 }

@@ -44,6 +44,25 @@ export type ProgressState =
   | 'mastered'
   | 'completed'
 
+// The three-value study mastery subset (`unseen → reviewing → mastered`) used by
+// kanji / vocabulary / grammar. Defined here (ahead of the list schemas) so those
+// schemas can offer it as an optional filter. Videos use VIDEO_PROGRESS_STATES.
+export const STUDY_PROGRESS_STATES = ['unseen', 'reviewing', 'mastered'] as const
+
+export type StudyProgressState = (typeof STUDY_PROGRESS_STATES)[number]
+
+// Shared optional filters on every study list (Phase 6b): mastery state +
+// bookmarked-only. `bookmarked` is parsed from the literal 'true'/'false' query
+// string (z.coerce.boolean would treat 'false' as true), matching the search
+// schema. Spread into each list query schema below.
+const studyListFilterFields = {
+  progressState: z.enum(STUDY_PROGRESS_STATES).optional(),
+  bookmarked: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
+}
+
 // ─── Kanji ────────────────────────────────────────────────────────────────────
 
 // `q` matches across character / onyomi / kunyomi / meaning (server-side ILIKE).
@@ -53,6 +72,7 @@ export type ProgressState =
 export const kanjiListQuerySchema = z.object({
   q: z.string().trim().optional(),
   strokeCount: z.coerce.number().int().positive().optional(),
+  ...studyListFilterFields,
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(24),
 })
@@ -110,6 +130,7 @@ export const VOCAB_POS_LABELS: Record<VocabPartOfSpeech, string> = {
 export const vocabularyListQuerySchema = z.object({
   q: z.string().trim().optional(),
   partOfSpeech: z.enum(VOCAB_PARTS_OF_SPEECH).optional(),
+  ...studyListFilterFields,
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(24),
 })
@@ -132,6 +153,7 @@ export type JlptLevel = (typeof JLPT_LEVELS)[number]
 export const grammarListQuerySchema = z.object({
   q: z.string().trim().optional(),
   jlptLevel: z.enum(JLPT_LEVELS).optional(),
+  ...studyListFilterFields,
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(24),
 })
@@ -174,12 +196,6 @@ export const PROGRESS_STATES = [
   'mastered',
   'completed',
 ] as const
-
-// Kanji / vocabulary / grammar mastery uses this three-value subset
-// (`unseen → reviewing → mastered`); videos use VIDEO_PROGRESS_STATES.
-export const STUDY_PROGRESS_STATES = ['unseen', 'reviewing', 'mastered'] as const
-
-export type StudyProgressState = (typeof STUDY_PROGRESS_STATES)[number]
 
 // PATCH /api/{kanji,vocabulary,grammar}/[id]/progress. Deliberately narrower than
 // the shared enum: a kanji can't be set to `in_progress`/`completed`.

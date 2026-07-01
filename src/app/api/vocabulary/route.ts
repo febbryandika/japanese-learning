@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   const parsed = vocabularyListQuerySchema.safeParse({
     q: sp.get('q') ?? undefined,
     partOfSpeech: sp.get('partOfSpeech') ?? undefined,
+    progressState: sp.get('progressState') ?? undefined,
+    bookmarked: sp.get('bookmarked') ?? undefined,
     page: sp.get('page') ?? undefined,
     pageSize: sp.get('pageSize') ?? undefined,
   })
@@ -24,9 +26,10 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { q, partOfSpeech, page, pageSize } = parsed.data
+  const { q, partOfSpeech, progressState, bookmarked, page, pageSize } =
+    parsed.data
   const { items, total } = await listVocabulary(
-    { q, partOfSpeech, page, pageSize },
+    { q, partOfSpeech, progressState, bookmarked, page, pageSize },
     session.user.id,
   )
 
