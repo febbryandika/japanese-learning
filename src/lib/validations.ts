@@ -327,6 +327,36 @@ export const lookupQuerySchema = z.object({
 
 export type LookupQuery = z.infer<typeof lookupQuerySchema>
 
+// ─── Search (SPEC §5.10) ────────────────────────────────────────────────────────
+
+// The four searchable resource types. `video` maps to published video lessons;
+// the other three are the study resources. Single source of truth for the query
+// enum and the search page's type filter.
+export const SEARCH_TYPES = ['kanji', 'vocabulary', 'grammar', 'video'] as const
+
+export type SearchType = (typeof SEARCH_TYPES)[number]
+
+// GET /api/search. `type` omitted → grouped preview across all applicable types;
+// `type` set → paginated single-type results. Filters mirror SPEC §5.10 (resource
+// type, mastery state, bookmarked-only, JLPT level). `jlptLevel` excludes videos
+// (no JLPT column). `bookmarked` is a string query param, so it's parsed from the
+// literal 'true'/'false' rather than coerced (z.coerce.boolean treats 'false' as
+// true). page/pageSize drive single-type paging, bounded like the list schemas.
+export const searchQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  type: z.enum(SEARCH_TYPES).optional(),
+  jlptLevel: z.enum(JLPT_LEVELS).optional(),
+  progressState: z.enum(PROGRESS_STATES).optional(),
+  bookmarked: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+})
+
+export type SearchQuery = z.infer<typeof searchQuerySchema>
+
 // ─── Admin (Phase 5) ──────────────────────────────────────────────────────────
 
 // Shared query for every admin list route: free-text search + bounded paging.

@@ -6,6 +6,7 @@ import { LogoutButton } from '@/components/LogoutButton'
 import { DashboardView } from '@/components/dashboard/DashboardView'
 
 const NAV_LINKS = [
+  { href: '/search', label: 'Search' },
   { href: '/videos', label: 'Videos' },
   { href: '/kanji', label: 'Kanji' },
   { href: '/vocabulary', label: 'Vocabulary' },
