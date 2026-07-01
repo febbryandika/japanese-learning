@@ -12,7 +12,7 @@ import {
 } from '@/hooks/use-admin-books'
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { AdminApiError } from '@/hooks/admin-api'
-import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
+import type { UpdateBookInput } from '@/lib/validations'
 import { AdminTable, type AdminColumn } from '@/components/admin/AdminTable'
 import { AdminFormDialog } from '@/components/admin/AdminFormDialog'
 import { AdminDeleteDialog } from '@/components/admin/AdminDeleteDialog'
@@ -48,8 +48,8 @@ export function BooksManager() {
     toast.error(error instanceof AdminApiError ? error.message : fallback)
   }
 
-  function handleCreate(input: CreateBookInput) {
-    createMutation.mutate(input, {
+  function handleCreate(formData: FormData) {
+    createMutation.mutate(formData, {
       onSuccess: () => {
         toast.success('Book uploaded')
         setDialog(null)

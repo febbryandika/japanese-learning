@@ -7,9 +7,9 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 
-import { adminFetch } from '@/hooks/admin-api'
+import { adminFetch, AdminApiError } from '@/hooks/admin-api'
 import type { AdminBook } from '@/services/admin/book.service'
-import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
+import type { UpdateBookInput } from '@/lib/validations'
 
 export type { AdminBook }
 
@@ -38,15 +38,27 @@ export function useAdminBooks(filters: AdminBookFilters) {
   })
 }
 
-// Persists the book row after the client-direct upload has produced a fileUrl.
+// Uploads the EPUB (multipart) + persists the row in one request. FormData sets
+// its own multipart Content-Type, so we don't route it through adminFetch.
 export function useCreateBook() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: CreateBookInput) =>
-      adminFetch<AdminBook>('/api/admin/reader/books', {
+    mutationFn: async (formData: FormData) => {
+      const res = await fetch('/api/admin/reader/books', {
         method: 'POST',
-        body: JSON.stringify(input),
-      }),
+        body: formData,
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string
+        } | null
+        throw new AdminApiError(
+          res.status,
+          body?.error ?? `Request failed (${res.status})`,
+        )
+      }
+      return res.json() as Promise<AdminBook>
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
   })
 }

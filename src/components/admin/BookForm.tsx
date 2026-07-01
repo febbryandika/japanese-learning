@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { upload } from '@vercel/blob/client'
 
-import type { CreateBookInput, UpdateBookInput } from '@/lib/validations'
+import type { UpdateBookInput } from '@/lib/validations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,7 +15,8 @@ type BookFormProps = {
     author?: string | null
     isPublished?: boolean
   }
-  onCreate?: (input: CreateBookInput) => void
+  // create: the multipart body (file + metadata); edit: metadata only.
+  onCreate?: (formData: FormData) => void
   onUpdate?: (input: UpdateBookInput) => void
   submitting: boolean
 }
@@ -34,10 +34,9 @@ export function BookForm({
     defaultValues?.isPublished ?? false,
   )
   const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function submit(event: FormEvent) {
+  function submit(event: FormEvent) {
     event.preventDefault()
     if (!title.trim()) {
       setError('Title is required')
@@ -59,29 +58,13 @@ export function BookForm({
     }
 
     setError(null)
-    setUploading(true)
-    try {
-      // Client-direct upload straight to Vercel Blob (token minted by the
-      // upload route); the file never passes through our server.
-      const blob = await upload(file.name, file, {
-        access: 'public',
-        handleUploadUrl: '/api/admin/reader/books/upload',
-        multipart: true,
-      })
-      onCreate?.({
-        title: title.trim(),
-        author: author.trim() || null,
-        fileUrl: blob.url,
-        isPublished,
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-    } finally {
-      setUploading(false)
-    }
+    const formData = new FormData()
+    formData.set('file', file)
+    formData.set('title', title.trim())
+    formData.set('author', author.trim())
+    formData.set('isPublished', String(isPublished))
+    onCreate?.(formData)
   }
-
-  const busy = uploading || submitting
 
   return (
     <form onSubmit={submit} noValidate className="space-y-4">
@@ -113,6 +96,9 @@ export function BookForm({
             accept=".epub,application/epub+zip"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
+          <p className="text-xs text-muted-foreground">
+            Stored privately; served only to signed-in readers.
+          </p>
         </div>
       ) : null}
 
@@ -132,14 +118,14 @@ export function BookForm({
       ) : null}
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={busy}>
-          {uploading
-            ? 'Uploading…'
-            : submitting
-              ? 'Saving…'
-              : mode === 'create'
-                ? 'Upload book'
-                : 'Save'}
+        <Button type="submit" disabled={submitting}>
+          {submitting
+            ? mode === 'create'
+              ? 'Uploading…'
+              : 'Saving…'
+            : mode === 'create'
+              ? 'Upload book'
+              : 'Save'}
         </Button>
       </div>
     </form>

@@ -61,7 +61,6 @@ export async function getBookDetail(
       id: epubBooks.id,
       title: epubBooks.title,
       author: epubBooks.author,
-      fileUrl: epubBooks.fileUrl,
       coverUrl: epubBooks.coverUrl,
       cfi: readerProgress.cfi,
     })
@@ -76,7 +75,25 @@ export async function getBookDetail(
     .where(and(eq(epubBooks.id, bookId), eq(epubBooks.isPublished, true)))
     .limit(1)
 
-  return row ?? null
+  if (!row) return null
+
+  // The raw fileUrl is a PRIVATE blob (or a /public seed path); either way the
+  // reader loads the authenticated proxy, which streams/redirects as needed.
+  return { ...row, fileUrl: `/api/reader/books/${row.id}/file` }
+}
+
+// The stored fileUrl for a published book — used only by the /file proxy to
+// resolve the underlying blob/path. Never sent to the client directly.
+export async function getPublishedBookFileUrl(
+  bookId: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ fileUrl: epubBooks.fileUrl })
+    .from(epubBooks)
+    .where(and(eq(epubBooks.id, bookId), eq(epubBooks.isPublished, true)))
+    .limit(1)
+
+  return row?.fileUrl ?? null
 }
 
 // Upsert the caller's reading position (keyed on `uq_reader_progress`). Returns

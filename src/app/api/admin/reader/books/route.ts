@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { put } from '@vercel/blob'
+import { createId } from '@paralleldrive/cuid2'
 
 import { requireAdmin } from '@/lib/auth'
-import { adminListQuerySchema, createBookSchema } from '@/lib/validations'
+import { adminListQuerySchema, bookUploadMetadataSchema } from '@/lib/validations'
 import { createBook, listBooksAdmin } from '@/services/admin/book.service'
 
 export async function GET(request: NextRequest) {
@@ -36,6 +38,10 @@ export async function GET(request: NextRequest) {
   })
 }
 
+// Server-side upload: the browser POSTs the EPUB as multipart/form-data; we
+// store it as a PRIVATE Vercel Blob (only served to authenticated learners via
+// the /file proxy) and persist the row. Subject to the platform request-body
+// limit (~4.5 MB) — fine for text light novels.
 export async function POST(request: Request) {
   const guard = await requireAdmin()
   if (!guard.ok) {
@@ -45,12 +51,38 @@ export async function POST(request: Request) {
     )
   }
 
-  const body = await request.json().catch(() => null)
-  const parsed = createBookSchema.safeParse(body)
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json(
+      { error: 'File upload is not configured (BLOB_READ_WRITE_TOKEN missing).' },
+      { status: 503 },
+    )
+  }
+
+  const form = await request.formData().catch(() => null)
+  if (!form) {
+    return NextResponse.json({ error: 'Expected multipart form data' }, { status: 400 })
+  }
+
+  const file = form.get('file')
+  if (!(file instanceof File) || file.size === 0) {
+    return NextResponse.json({ error: 'An EPUB file is required' }, { status: 400 })
+  }
+
+  const authorRaw = form.get('author')
+  const parsed = bookUploadMetadataSchema.safeParse({
+    title: form.get('title'),
+    author: typeof authorRaw === 'string' && authorRaw.trim() ? authorRaw.trim() : null,
+    isPublished: form.get('isPublished') === 'true',
+  })
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid book' }, { status: 400 })
   }
 
-  const created = await createBook(parsed.data)
+  const blob = await put(`books/${createId()}.epub`, file, {
+    access: 'private',
+    contentType: file.type || 'application/epub+zip',
+  })
+
+  const created = await createBook({ ...parsed.data, fileUrl: blob.url })
   return NextResponse.json(created, { status: 201 })
 }
