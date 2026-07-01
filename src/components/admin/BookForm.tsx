@@ -2,7 +2,11 @@
 
 import { useState, type FormEvent } from 'react'
 
-import type { UpdateBookInput } from '@/lib/validations'
+import {
+  MAX_EPUB_UPLOAD_BYTES,
+  MAX_EPUB_UPLOAD_MB,
+  type UpdateBookInput,
+} from '@/lib/validations'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -56,6 +60,10 @@ export function BookForm({
       setError('Choose an EPUB file to upload')
       return
     }
+    if (file.size > MAX_EPUB_UPLOAD_BYTES) {
+      setError(`EPUB must be under ${MAX_EPUB_UPLOAD_MB} MB`)
+      return
+    }
 
     setError(null)
     const formData = new FormData()
@@ -94,10 +102,19 @@ export function BookForm({
             id="b-file"
             type="file"
             accept=".epub,application/epub+zip"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              const next = e.target.files?.[0] ?? null
+              setFile(next)
+              setError(
+                next && next.size > MAX_EPUB_UPLOAD_BYTES
+                  ? `EPUB must be under ${MAX_EPUB_UPLOAD_MB} MB`
+                  : null,
+              )
+            }}
           />
           <p className="text-xs text-muted-foreground">
-            Stored privately; served only to signed-in readers.
+            Stored privately; served only to signed-in readers. Max{' '}
+            {MAX_EPUB_UPLOAD_MB} MB.
           </p>
         </div>
       ) : null}

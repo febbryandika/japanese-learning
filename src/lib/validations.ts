@@ -546,6 +546,12 @@ export const createBookSchema = z.object({
   isPublished: z.boolean().default(false),
 })
 
+// Server-side uploads pass through the serverless function, so the EPUB must fit
+// under the platform's ~4.5 MB request-body limit (with headroom for the
+// multipart envelope). Enforced on both the client and the route.
+export const MAX_EPUB_UPLOAD_MB = 4
+export const MAX_EPUB_UPLOAD_BYTES = MAX_EPUB_UPLOAD_MB * 1024 * 1024
+
 // The metadata that accompanies a multipart upload (the file is read separately
 // from the form). Books are uploaded server-side, so there is no client fileUrl.
 export const bookUploadMetadataSchema = z.object({

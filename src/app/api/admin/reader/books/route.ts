@@ -3,7 +3,12 @@ import { put } from '@vercel/blob'
 import { createId } from '@paralleldrive/cuid2'
 
 import { requireAdmin } from '@/lib/auth'
-import { adminListQuerySchema, bookUploadMetadataSchema } from '@/lib/validations'
+import {
+  adminListQuerySchema,
+  bookUploadMetadataSchema,
+  MAX_EPUB_UPLOAD_BYTES,
+  MAX_EPUB_UPLOAD_MB,
+} from '@/lib/validations'
 import { createBook, listBooksAdmin } from '@/services/admin/book.service'
 
 export async function GET(request: NextRequest) {
@@ -66,6 +71,12 @@ export async function POST(request: Request) {
   const file = form.get('file')
   if (!(file instanceof File) || file.size === 0) {
     return NextResponse.json({ error: 'An EPUB file is required' }, { status: 400 })
+  }
+  if (file.size > MAX_EPUB_UPLOAD_BYTES) {
+    return NextResponse.json(
+      { error: `EPUB must be under ${MAX_EPUB_UPLOAD_MB} MB` },
+      { status: 413 },
+    )
   }
 
   const authorRaw = form.get('author')

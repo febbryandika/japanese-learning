@@ -71,6 +71,17 @@ describe('POST /api/admin/reader/books', () => {
     expect(putMock).not.toHaveBeenCalled()
   })
 
+  it('returns 413 when the file exceeds the size limit', async () => {
+    requireAdminMock.mockResolvedValue({ ok: true, session: { user: { id: 'u1' } } })
+    // 5 MB file — over the 4 MB cap.
+    const big = new File([new Uint8Array(5 * 1024 * 1024)], 'big.epub', {
+      type: 'application/epub+zip',
+    })
+    const res = await POST(formRequest({ file: big, title: 'Big' }))
+    expect(res.status).toBe(413)
+    expect(putMock).not.toHaveBeenCalled()
+  })
+
   it('puts a private blob and persists the row (201)', async () => {
     requireAdminMock.mockResolvedValue({ ok: true, session: { user: { id: 'u1' } } })
     putMock.mockResolvedValue({ url: 'https://s.blob.vercel-storage.com/books/x.epub' })
