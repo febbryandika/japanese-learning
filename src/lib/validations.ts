@@ -534,3 +534,40 @@ export const updateExamQuestionSchema = z
 export type ExamQuestionInput = z.infer<typeof examQuestionSchema>
 export type UpdateExamQuestionInput = z.infer<typeof updateExamQuestionSchema>
 export type ExamQuestionFormValues = z.input<typeof examQuestionSchema>
+
+// Epub books. `fileUrl` is the private Vercel Blob URL produced server-side by
+// the upload; it is not part of the client request. `author`/`coverUrl` are
+// clearable (merge-patch). The file itself isn't changed via metadata update.
+export const createBookSchema = z.object({
+  title: z.string().min(1).max(300),
+  author: z.string().max(200).nullish(),
+  fileUrl: z.url(),
+  coverUrl: z.url().nullish(),
+  isPublished: z.boolean().default(false),
+})
+
+// Server-side uploads pass through the serverless function, so the EPUB must fit
+// under the platform's ~4.5 MB request-body limit (with headroom for the
+// multipart envelope). Enforced on both the client and the route.
+export const MAX_EPUB_UPLOAD_MB = 4
+export const MAX_EPUB_UPLOAD_BYTES = MAX_EPUB_UPLOAD_MB * 1024 * 1024
+
+// The metadata that accompanies a multipart upload (the file is read separately
+// from the form). Books are uploaded server-side, so there is no client fileUrl.
+export const bookUploadMetadataSchema = z.object({
+  title: z.string().min(1).max(300),
+  author: z.string().max(200).nullish(),
+  isPublished: z.boolean(),
+})
+
+export type BookUploadMetadata = z.infer<typeof bookUploadMetadataSchema>
+
+export const updateBookSchema = z.object({
+  title: z.string().min(1).max(300).optional(),
+  author: z.string().max(200).nullish(),
+  coverUrl: z.url().nullish(),
+  isPublished: z.boolean().optional(),
+})
+
+export type CreateBookInput = z.infer<typeof createBookSchema>
+export type UpdateBookInput = z.infer<typeof updateBookSchema>

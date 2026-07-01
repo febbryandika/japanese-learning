@@ -67,17 +67,19 @@ describe('listPublishedBooks', () => {
 })
 
 describe('getBookDetail', () => {
-  it('returns the book joined with the caller cfi when found', async () => {
-    const book = {
+  it('returns the book with fileUrl pointing at the authenticated serve proxy', async () => {
+    const row = {
       id: 'b1',
       title: 'A',
       author: null,
-      fileUrl: '/a.epub',
       coverUrl: null,
       cfi: 'epubcfi(/6/4)',
     }
-    queueSelect([book])
-    await expect(getBookDetail('user-1', 'b1')).resolves.toEqual(book)
+    queueSelect([row])
+    await expect(getBookDetail('user-1', 'b1')).resolves.toEqual({
+      ...row,
+      fileUrl: '/api/reader/books/b1/file',
+    })
   })
 
   it('returns null when the book is missing or unpublished', async () => {
