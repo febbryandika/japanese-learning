@@ -6,7 +6,12 @@ import {
   kanjiCompoundSchema,
   type KanjiCompound,
   type ProgressState,
+  type StudyProgressState,
 } from '@/lib/validations'
+import {
+  bookmarkedFilter,
+  progressStateFilter,
+} from '@/services/study-filters'
 
 // List/detail share the same public column set; `notes` is never exposed raw —
 // it is parsed into `compounds` on the detail path only.
@@ -40,12 +45,14 @@ export type KanjiDetail = KanjiListItem & {
 type ListParams = {
   q?: string
   strokeCount?: number
+  progressState?: StudyProgressState
+  bookmarked?: boolean
   page: number
   pageSize: number
 }
 
 export async function listKanji(
-  { q, strokeCount, page, pageSize }: ListParams,
+  { q, strokeCount, progressState, bookmarked, page, pageSize }: ListParams,
   userId: string,
 ): Promise<{ items: KanjiListItem[]; total: number }> {
   const filters: SQL[] = []
@@ -66,28 +73,36 @@ export async function listKanji(
     filters.push(eq(kanjiItems.strokeCount, strokeCount))
   }
 
+  const prog = progressStateFilter(progressState)
+  if (prog) filters.push(prog)
+  if (bookmarked) filters.push(bookmarkedFilter('kanji', kanjiItems.id, userId))
+
   const where = filters.length ? and(...filters) : undefined
+
+  // Per-user progress so each card shows the caller's mastery badge and the state
+  // filter can match; a missing row means `unseen`. The join is 1:1 (uq_progress),
+  // so it's safe in the count query too.
+  const progressJoin = and(
+    eq(studyProgress.targetId, kanjiItems.id),
+    eq(studyProgress.targetType, 'kanji'),
+    eq(studyProgress.userId, userId),
+  )
 
   const [rows, totalResult] = await Promise.all([
     db
       .select({ ...listColumns, progressState: studyProgress.progressState })
       .from(kanjiItems)
-      // Per-user progress so each card shows the caller's mastery badge; a missing
-      // row means `unseen`.
-      .leftJoin(
-        studyProgress,
-        and(
-          eq(studyProgress.targetId, kanjiItems.id),
-          eq(studyProgress.targetType, 'kanji'),
-          eq(studyProgress.userId, userId),
-        ),
-      )
+      .leftJoin(studyProgress, progressJoin)
       .where(where)
       // `character` is unique → stable ordering, so offset paging is deterministic.
       .orderBy(asc(kanjiItems.character))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
-    db.select({ total: count() }).from(kanjiItems).where(where),
+    db
+      .select({ total: count() })
+      .from(kanjiItems)
+      .leftJoin(studyProgress, progressJoin)
+      .where(where),
   ])
 
   const items = rows.map((row) => ({

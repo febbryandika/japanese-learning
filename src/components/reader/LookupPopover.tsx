@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ErrorState'
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
 import { useLookup } from '@/hooks/use-lookup'
 
 type LookupPopoverProps = {
@@ -152,16 +153,4 @@ function LookupSkeleton() {
       <Skeleton className="h-10 w-full rounded-md" />
     </div>
   )
-}
-
-// Debounce so rapid re-selections don't each fire a request.
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value)
-
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delayMs)
-    return () => clearTimeout(id)
-  }, [value, delayMs])
-
-  return debounced
 }

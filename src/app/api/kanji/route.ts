@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   const parsed = kanjiListQuerySchema.safeParse({
     q: sp.get('q') ?? undefined,
     strokeCount: sp.get('strokeCount') ?? undefined,
+    progressState: sp.get('progressState') ?? undefined,
+    bookmarked: sp.get('bookmarked') ?? undefined,
     page: sp.get('page') ?? undefined,
     pageSize: sp.get('pageSize') ?? undefined,
   })
@@ -24,9 +26,13 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { q, strokeCount, page, pageSize } = parsed.data
+  const { q, strokeCount, progressState, bookmarked, page, pageSize } =
+    parsed.data
   const [{ items, total }, strokeCounts] = await Promise.all([
-    listKanji({ q, strokeCount, page, pageSize }, session.user.id),
+    listKanji(
+      { q, strokeCount, progressState, bookmarked, page, pageSize },
+      session.user.id,
+    ),
     getStrokeCountOptions(),
   ])
 

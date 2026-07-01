@@ -2,7 +2,15 @@ import { and, asc, count, eq, ilike, or, type SQL } from 'drizzle-orm'
 
 import { db } from '@/lib/db'
 import { studyProgress, vocabularyItems } from '@/lib/db/schema'
-import type { ProgressState, VocabPartOfSpeech } from '@/lib/validations'
+import type {
+  ProgressState,
+  StudyProgressState,
+  VocabPartOfSpeech,
+} from '@/lib/validations'
+import {
+  bookmarkedFilter,
+  progressStateFilter,
+} from '@/services/study-filters'
 
 // List/detail share the same core column set; the detail path additionally
 // exposes `notes` and the curated example sentence fields.
@@ -36,12 +44,14 @@ export type VocabularyDetail = VocabularyListItem & {
 type ListParams = {
   q?: string
   partOfSpeech?: VocabPartOfSpeech
+  progressState?: StudyProgressState
+  bookmarked?: boolean
   page: number
   pageSize: number
 }
 
 export async function listVocabulary(
-  { q, partOfSpeech, page, pageSize }: ListParams,
+  { q, partOfSpeech, progressState, bookmarked, page, pageSize }: ListParams,
   userId: string,
 ): Promise<{ items: VocabularyListItem[]; total: number }> {
   const filters: SQL[] = []
@@ -61,29 +71,39 @@ export async function listVocabulary(
     filters.push(eq(vocabularyItems.partOfSpeech, partOfSpeech))
   }
 
+  const prog = progressStateFilter(progressState)
+  if (prog) filters.push(prog)
+  if (bookmarked) {
+    filters.push(bookmarkedFilter('vocabulary', vocabularyItems.id, userId))
+  }
+
   const where = filters.length ? and(...filters) : undefined
+
+  // Per-user progress so each card shows the caller's mastery badge and the state
+  // filter can match; a missing row means `unseen`. The join is 1:1 (uq_progress),
+  // so it's safe in the count query too.
+  const progressJoin = and(
+    eq(studyProgress.targetId, vocabularyItems.id),
+    eq(studyProgress.targetType, 'vocabulary'),
+    eq(studyProgress.userId, userId),
+  )
 
   const [rows, totalResult] = await Promise.all([
     db
       .select({ ...listColumns, progressState: studyProgress.progressState })
       .from(vocabularyItems)
-      // Per-user progress so each card shows the caller's mastery badge; a missing
-      // row means `unseen`.
-      .leftJoin(
-        studyProgress,
-        and(
-          eq(studyProgress.targetId, vocabularyItems.id),
-          eq(studyProgress.targetType, 'vocabulary'),
-          eq(studyProgress.userId, userId),
-        ),
-      )
+      .leftJoin(studyProgress, progressJoin)
       .where(where)
       // `word` is not unique → add `id` as a tiebreaker so offset paging is
       // deterministic (no duplicate/skipped rows across pages).
       .orderBy(asc(vocabularyItems.word), asc(vocabularyItems.id))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
-    db.select({ total: count() }).from(vocabularyItems).where(where),
+    db
+      .select({ total: count() })
+      .from(vocabularyItems)
+      .leftJoin(studyProgress, progressJoin)
+      .where(where),
   ])
 
   const items = rows.map((row) => ({

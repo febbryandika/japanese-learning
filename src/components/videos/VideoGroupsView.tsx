@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { useLessonGroups } from '@/hooks/use-videos'
-import { ErrorState } from '@/components/videos/ErrorState'
+import { ErrorState } from '@/components/ErrorState'
 import {
   Card,
   CardDescription,

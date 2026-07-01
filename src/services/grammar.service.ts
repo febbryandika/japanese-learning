@@ -2,7 +2,15 @@ import { and, asc, count, eq, ilike, or, type SQL } from 'drizzle-orm'
 
 import { db } from '@/lib/db'
 import { grammarExamples, grammarItems, studyProgress } from '@/lib/db/schema'
-import type { JlptLevel, ProgressState } from '@/lib/validations'
+import type {
+  JlptLevel,
+  ProgressState,
+  StudyProgressState,
+} from '@/lib/validations'
+import {
+  bookmarkedFilter,
+  progressStateFilter,
+} from '@/services/study-filters'
 
 // List/detail share the same base column set; detail adds the optional prose
 // fields plus the joined curated examples.
@@ -40,12 +48,14 @@ export type GrammarDetail = GrammarListItem & {
 type ListParams = {
   q?: string
   jlptLevel?: JlptLevel
+  progressState?: StudyProgressState
+  bookmarked?: boolean
   page: number
   pageSize: number
 }
 
 export async function listGrammar(
-  { q, jlptLevel, page, pageSize }: ListParams,
+  { q, jlptLevel, progressState, bookmarked, page, pageSize }: ListParams,
   userId: string,
 ): Promise<{ items: GrammarListItem[]; total: number }> {
   const filters: SQL[] = []
@@ -64,29 +74,39 @@ export async function listGrammar(
     filters.push(eq(grammarItems.jlptLevel, jlptLevel))
   }
 
+  const prog = progressStateFilter(progressState)
+  if (prog) filters.push(prog)
+  if (bookmarked) {
+    filters.push(bookmarkedFilter('grammar', grammarItems.id, userId))
+  }
+
   const where = filters.length ? and(...filters) : undefined
+
+  // Per-user progress so each card shows the caller's mastery badge and the state
+  // filter can match; a missing row means `unseen`. The join is 1:1 (uq_progress),
+  // so it's safe in the count query too.
+  const progressJoin = and(
+    eq(studyProgress.targetId, grammarItems.id),
+    eq(studyProgress.targetType, 'grammar'),
+    eq(studyProgress.userId, userId),
+  )
 
   const [rows, totalResult] = await Promise.all([
     db
       .select({ ...listColumns, progressState: studyProgress.progressState })
       .from(grammarItems)
-      // Per-user progress so each card shows the caller's mastery badge; a missing
-      // row means `unseen`.
-      .leftJoin(
-        studyProgress,
-        and(
-          eq(studyProgress.targetId, grammarItems.id),
-          eq(studyProgress.targetType, 'grammar'),
-          eq(studyProgress.userId, userId),
-        ),
-      )
+      .leftJoin(studyProgress, progressJoin)
       .where(where)
       // `pattern` is not unique → add `id` as a tiebreaker so offset paging is
       // deterministic (no duplicate/skipped rows across pages).
       .orderBy(asc(grammarItems.pattern), asc(grammarItems.id))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
-    db.select({ total: count() }).from(grammarItems).where(where),
+    db
+      .select({ total: count() })
+      .from(grammarItems)
+      .leftJoin(studyProgress, progressJoin)
+      .where(where),
   ])
 
   const items = rows.map((row) => ({
