@@ -534,3 +534,24 @@ export const updateExamQuestionSchema = z
 export type ExamQuestionInput = z.infer<typeof examQuestionSchema>
 export type UpdateExamQuestionInput = z.infer<typeof updateExamQuestionSchema>
 export type ExamQuestionFormValues = z.input<typeof examQuestionSchema>
+
+// Epub books. `fileUrl` is the Vercel Blob URL the client obtains from the
+// client-direct upload, then sends here with the metadata. `author`/`coverUrl`
+// are clearable (merge-patch). The file itself isn't changed via metadata update.
+export const createBookSchema = z.object({
+  title: z.string().min(1).max(300),
+  author: z.string().max(200).nullish(),
+  fileUrl: z.url(),
+  coverUrl: z.url().nullish(),
+  isPublished: z.boolean().default(false),
+})
+
+export const updateBookSchema = z.object({
+  title: z.string().min(1).max(300).optional(),
+  author: z.string().max(200).nullish(),
+  coverUrl: z.url().nullish(),
+  isPublished: z.boolean().optional(),
+})
+
+export type CreateBookInput = z.infer<typeof createBookSchema>
+export type UpdateBookInput = z.infer<typeof updateBookSchema>
