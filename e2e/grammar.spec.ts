@@ -19,6 +19,10 @@ test('guest is redirected from /grammar to /login', async ({ page }) => {
 test('browse grammar → paginate → search → filter by JLPT → open detail', async ({
   page,
 }) => {
+  // The dev server compiles each route on first hit; this multi-route flow can
+  // exceed the default 30s while routes warm up.
+  test.setTimeout(60_000)
+
   // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
   const email = `e2e+grammar+${Date.now()}@example.com`
   await page.goto('/register')
@@ -48,14 +52,17 @@ test('browse grammar → paginate → search → filter by JLPT → open detail'
   ])
   await expect(page.getByText(/Page 1 of/)).toBeVisible()
 
-  // Clear the search to restore the full list.
-  await Promise.all([
-    page.waitForResponse(grammarList((url) => !url.includes('q='))),
-    page.getByRole('searchbox', { name: 'Search grammar' }).fill(''),
-  ])
+  // Clear the search to restore the full list. With the tuned staleTime the
+  // original unfiltered page is served from cache, so assert on the UI rather
+  // than a network response that won't fire.
+  await page.getByRole('searchbox', { name: 'Search grammar' }).fill('')
+  await expect(
+    page.getByRole('searchbox', { name: 'Search grammar' }),
+  ).toHaveValue('')
+  await expect(page.locator('a[href^="/grammar/"]').first()).toBeVisible()
 
-  // JLPT filter: pick the first real value (N2) from the dropdown.
-  await page.locator('[data-slot="select-trigger"]').click()
+  // JLPT filter is the first of the filter selects (JLPT / mastery).
+  await page.locator('[data-slot="select-trigger"]').first().click()
   await Promise.all([
     page.waitForResponse(grammarList((url) => url.includes('jlptLevel='))),
     page.getByRole('option').nth(1).click(),
@@ -74,5 +81,7 @@ test('browse grammar → paginate → search → filter by JLPT → open detail'
   await expect(
     page.getByRole('heading', { name: 'Example sentences' }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'All grammar' })).toBeVisible()
+  await expect(
+    page.getByRole('navigation', { name: 'Breadcrumb' }),
+  ).toBeVisible()
 })

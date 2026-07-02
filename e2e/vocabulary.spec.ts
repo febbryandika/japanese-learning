@@ -19,6 +19,10 @@ test('guest is redirected from /vocabulary to /login', async ({ page }) => {
 test('browse vocabulary → paginate → search → filter by part of speech → open detail', async ({
   page,
 }) => {
+  // The dev server compiles each route on first hit; this multi-route flow can
+  // exceed the default 30s while routes warm up.
+  test.setTimeout(60_000)
+
   // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
   const email = `e2e+vocab+${Date.now()}@example.com`
   await page.goto('/register')
@@ -48,14 +52,17 @@ test('browse vocabulary → paginate → search → filter by part of speech →
   ])
   await expect(page.getByText(/Page 1 of/)).toBeVisible()
 
-  // Clear the search to restore the full list.
-  await Promise.all([
-    page.waitForResponse(vocabList((url) => !url.includes('q='))),
-    page.getByRole('searchbox', { name: 'Search vocabulary' }).fill(''),
-  ])
+  // Clear the search to restore the full list. With the tuned staleTime the
+  // original unfiltered page is served from cache, so assert on the UI rather
+  // than a network response that won't fire.
+  await page.getByRole('searchbox', { name: 'Search vocabulary' }).fill('')
+  await expect(
+    page.getByRole('searchbox', { name: 'Search vocabulary' }),
+  ).toHaveValue('')
+  await expect(page.locator('a[href^="/vocabulary/"]').first()).toBeVisible()
 
-  // Part-of-speech filter: pick the first real value (Noun) from the dropdown.
-  await page.locator('[data-slot="select-trigger"]').click()
+  // Part-of-speech filter is the first of the filter selects (POS / mastery).
+  await page.locator('[data-slot="select-trigger"]').first().click()
   await Promise.all([
     page.waitForResponse(vocabList((url) => url.includes('partOfSpeech='))),
     page.getByRole('option').nth(1).click(),
@@ -74,5 +81,7 @@ test('browse vocabulary → paginate → search → filter by part of speech →
   await expect(
     page.getByRole('heading', { name: 'Example sentence' }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'All vocabulary' })).toBeVisible()
+  await expect(
+    page.getByRole('navigation', { name: 'Breadcrumb' }),
+  ).toBeVisible()
 })
