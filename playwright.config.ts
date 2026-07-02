@@ -5,7 +5,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // Run serially. Each spec registers a fresh user, and several concurrent
+  // sign-ups (multi-write auth transactions) overwhelm the Neon serverless pool
+  // against a single dev server, hanging `signUp.email`. One worker keeps
+  // registration reliable; the suite is small enough that serial is fine.
+  workers: 1,
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:3000',

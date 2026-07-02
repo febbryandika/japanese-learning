@@ -19,6 +19,10 @@ test('guest is redirected from /grammar to /login', async ({ page }) => {
 test('browse grammar → paginate → search → filter by JLPT → open detail', async ({
   page,
 }) => {
+  // The dev server compiles each route on first hit; this multi-route flow can
+  // exceed the default 30s while routes warm up.
+  test.setTimeout(60_000)
+
   // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
   const email = `e2e+grammar+${Date.now()}@example.com`
   await page.goto('/register')
@@ -48,14 +52,16 @@ test('browse grammar → paginate → search → filter by JLPT → open detail'
   ])
   await expect(page.getByText(/Page 1 of/)).toBeVisible()
 
-  // Clear the search to restore the full list.
-  await Promise.all([
-    page.waitForResponse(grammarList((url) => !url.includes('q='))),
-    page.getByRole('searchbox', { name: 'Search grammar' }).fill(''),
-  ])
+  // Clear the search to restore the full list. With the tuned staleTime the
+  // original unfiltered page is served from cache (no network response). Wait for
+  // the debounced clear to settle in the URL before filtering, so the filter's
+  // navigation can't race (and clobber) the search-clear navigation.
+  await page.getByRole('searchbox', { name: 'Search grammar' }).fill('')
+  await expect(page).not.toHaveURL(/q=/)
+  await expect(page.locator('a[href^="/grammar/"]').first()).toBeVisible()
 
-  // JLPT filter: pick the first real value (N2) from the dropdown.
-  await page.locator('[data-slot="select-trigger"]').click()
+  // JLPT filter is the first of the filter selects (JLPT / mastery).
+  await page.locator('[data-slot="select-trigger"]').first().click()
   await Promise.all([
     page.waitForResponse(grammarList((url) => url.includes('jlptLevel='))),
     page.getByRole('option').nth(1).click(),
@@ -72,7 +78,10 @@ test('browse grammar → paginate → search → filter by JLPT → open detail'
     page.locator('a[href^="/grammar/"]').first().click(),
   ])
   await expect(
-    page.getByRole('heading', { name: 'Example sentences' }),
+    // `exact` so it doesn't also match the "AI example sentences" heading.
+    page.getByRole('heading', { name: 'Example sentences', exact: true }),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'All grammar' })).toBeVisible()
+  await expect(
+    page.getByRole('navigation', { name: 'Breadcrumb' }),
+  ).toBeVisible()
 })
