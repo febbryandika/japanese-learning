@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { useLessonGroups } from '@/hooks/use-videos'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
 import {
   Card,
   CardDescription,
@@ -24,9 +25,7 @@ export function VideoGroupsView() {
   }
 
   if (groups.length === 0) {
-    return (
-      <p className="text-muted-foreground">No lesson groups are available yet.</p>
-    )
+    return <EmptyState message="No lesson groups are available yet." />
   }
 
   return (

@@ -1,13 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useGrammarDetail } from '@/hooks/use-grammar'
 import { useUpdateProgress } from '@/hooks/use-progress'
 import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
@@ -28,13 +27,12 @@ export function GrammarDetailView({ id }: { id: string }) {
 
   return (
     <article className="space-y-8">
-      <Link
-        href="/grammar"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        All grammar
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: 'Grammar', href: '/grammar' },
+          { label: grammar.pattern },
+        ]}
+      />
 
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-2">

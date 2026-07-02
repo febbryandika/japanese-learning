@@ -1,13 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useVocabularyDetail } from '@/hooks/use-vocabulary'
 import { useUpdateProgress } from '@/hooks/use-progress'
 import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
@@ -44,13 +43,12 @@ export function VocabularyDetailView({ id }: { id: string }) {
 
   return (
     <article className="space-y-8">
-      <Link
-        href="/vocabulary"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        All vocabulary
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: 'Vocabulary', href: '/vocabulary' },
+          { label: vocab.word },
+        ]}
+      />
 
       <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">

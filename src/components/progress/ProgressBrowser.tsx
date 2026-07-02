@@ -15,6 +15,7 @@ import { VideoLessonCard } from '@/components/VideoLessonCard'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { PROGRESS_LABELS } from '@/components/ProgressBadge'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
@@ -138,11 +139,13 @@ function ProgressResults({
 
   if (data.length === 0) {
     return (
-      <p className="text-muted-foreground">
-        {filtersActive
-          ? 'No resources match this filter.'
-          : 'No tracked resources yet. Open a kanji, vocabulary, grammar, or video lesson to start tracking progress.'}
-      </p>
+      <EmptyState
+        message={
+          filtersActive
+            ? 'No resources match this filter.'
+            : 'No tracked resources yet. Open a kanji, vocabulary, grammar, or video lesson to start tracking progress.'
+        }
+      />
     )
   }
 

@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { useVideoLessons } from '@/hooks/use-videos'
 import { ProgressBadge } from '@/components/ProgressBadge'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDuration } from '@/lib/utils'
@@ -28,7 +29,7 @@ export function GroupLessonsView({
   }
 
   if (lessons.length === 0) {
-    return <p className="text-muted-foreground">No lessons in this group yet.</p>
+    return <EmptyState message="No lessons in this group yet." />
   }
 
   return (

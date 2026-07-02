@@ -7,6 +7,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
 import { useBooks } from '@/hooks/use-reader'
 import type { BookListItem } from '@/services/reader.service'
 
@@ -22,9 +23,7 @@ export function ReaderLibrary() {
   }
 
   if (data.length === 0) {
-    return (
-      <p className="text-muted-foreground">No books are available yet.</p>
-    )
+    return <EmptyState message="No books are available yet." />
   }
 
   return (
