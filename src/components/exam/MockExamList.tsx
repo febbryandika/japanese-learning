@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { useMockExams } from '@/hooks/use-exam'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -32,9 +33,7 @@ export function MockExamList() {
   }
 
   if (data.length === 0) {
-    return (
-      <p className="text-muted-foreground">No mock exams available yet.</p>
-    )
+    return <EmptyState message="No mock exams available yet." />
   }
 
   return (

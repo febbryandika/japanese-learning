@@ -9,6 +9,7 @@ import { VocabularyCard } from '@/components/VocabularyCard'
 import { GrammarCard } from '@/components/GrammarCard'
 import { VideoLessonCard } from '@/components/VideoLessonCard'
 import { ErrorState } from '@/components/ErrorState'
+import { EmptyState } from '@/components/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Select,
@@ -98,11 +99,13 @@ function BookmarkResults({
 
   if (data.length === 0) {
     return (
-      <p className="text-muted-foreground">
-        {filter === 'all'
-          ? 'No bookmarks yet. Open a kanji, vocabulary, grammar, or video lesson and tap the bookmark icon.'
-          : `No ${(FILTER_ITEMS[filter] ?? 'items').toLowerCase()} bookmarked yet.`}
-      </p>
+      <EmptyState
+        message={
+          filter === 'all'
+            ? 'No bookmarks yet. Open a kanji, vocabulary, grammar, or video lesson and tap the bookmark icon.'
+            : `No ${(FILTER_ITEMS[filter] ?? 'items').toLowerCase()} bookmarked yet.`
+        }
+      />
     )
   }
 

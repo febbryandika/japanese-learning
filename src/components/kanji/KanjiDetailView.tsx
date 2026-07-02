@@ -1,13 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useKanjiDetail } from '@/hooks/use-kanji'
 import { useUpdateProgress } from '@/hooks/use-progress'
 import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
@@ -28,13 +27,9 @@ export function KanjiDetailView({ id }: { id: string }) {
 
   return (
     <article className="space-y-8">
-      <Link
-        href="/kanji"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        All kanji
-      </Link>
+      <Breadcrumbs
+        items={[{ label: 'Kanji', href: '/kanji' }, { label: kanji.character }]}
+      />
 
       <header className="flex flex-wrap items-start gap-6">
         <span className="text-7xl leading-none" lang="ja">
