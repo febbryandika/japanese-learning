@@ -49,12 +49,11 @@ test('browse kanji → paginate → search → filter by strokes → open detail
   await expect(page.getByText(/Page 1 of/)).toBeVisible()
 
   // Clear the search to restore the full list. With the tuned staleTime the
-  // original unfiltered page is served from cache, so assert on the UI rather
-  // than a network response that won't fire.
+  // original unfiltered page is served from cache (no network response). Wait for
+  // the debounced clear to settle in the URL before filtering, so the filter's
+  // navigation can't race (and clobber) the search-clear navigation.
   await page.getByRole('searchbox', { name: 'Search kanji' }).fill('')
-  await expect(
-    page.getByRole('searchbox', { name: 'Search kanji' }),
-  ).toHaveValue('')
+  await expect(page).not.toHaveURL(/q=/)
   await expect(page.locator('a[href^="/kanji/"]').first()).toBeVisible()
 
   // Stroke-count filter is the first of the filter selects (stroke / mastery).
