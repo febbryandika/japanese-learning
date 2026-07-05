@@ -2,8 +2,8 @@
 
 import { Search } from 'lucide-react'
 
-import { Input } from '@/components/ui/input'
-
+// Large hero search field (Sumi Night): rounded surface card with an inline
+// icon, unstyled input inside.
 export function SearchInput({
   value,
   onChange,
@@ -12,18 +12,15 @@ export function SearchInput({
   onChange: (value: string) => void
 }) {
   return (
-    <div className="relative">
-      <Search
-        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-        aria-hidden
-      />
-      <Input
+    <div className="flex items-center gap-3 rounded-2xl border bg-card px-4.5 py-3.5 transition-colors focus-within:border-primary">
+      <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+      <input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search kanji, vocabulary, grammar, and videos"
+        placeholder="Search kanji, vocabulary, grammar, and videos…"
         aria-label="Search"
-        className="pl-9"
+        className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
       />
     </div>
   )

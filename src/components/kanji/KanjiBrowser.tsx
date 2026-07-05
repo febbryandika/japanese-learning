@@ -4,6 +4,7 @@ import { useKanjiList } from '@/hooks/use-kanji'
 import { useListUrlState } from '@/hooks/use-list-url-state'
 import type { StudyProgressState } from '@/lib/validations'
 import { KanjiCard } from '@/components/KanjiCard'
+import { PageHeader } from '@/components/PageHeader'
 import { PaginationControls } from '@/components/PaginationControls'
 import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
@@ -46,57 +47,65 @@ export function KanjiBrowser() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+    <div>
+      <PageHeader title="Kanji" jpTitle="漢字">
         <Input
           type="search"
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
-          placeholder="Search by character, reading, or meaning"
+          placeholder="Search kanji, meaning, reading…"
           aria-label="Search kanji"
-          className="sm:max-w-xs"
+          className="w-56 rounded-full sm:w-64"
         />
-        <Select
-          items={strokeItems}
-          value={strokeCount == null ? 'all' : String(strokeCount)}
-          onValueChange={(value) =>
-            setParam(
-              'strokeCount',
-              value == null || value === 'all' ? undefined : value,
-            )
-          }
-        >
-          <SelectTrigger className="w-48" aria-label="Filter by stroke count">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(strokeItems).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <MasteryFilter
-          value={progressState}
-          onChange={(value) => setParam('progressState', value)}
-        />
-        <BookmarkedToggle
-          active={bookmarked}
-          onToggle={(active) =>
-            setParam('bookmarked', active ? 'true' : undefined)
-          }
+      </PageHeader>
+
+      <div className="mx-auto w-full max-w-6xl px-6 py-6 sm:px-8">
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <MasteryFilter
+            value={progressState}
+            onChange={(value) => setParam('progressState', value)}
+          />
+          <BookmarkedToggle
+            active={bookmarked}
+            onToggle={(active) =>
+              setParam('bookmarked', active ? 'true' : undefined)
+            }
+          />
+          <Select
+            items={strokeItems}
+            value={strokeCount == null ? 'all' : String(strokeCount)}
+            onValueChange={(value) =>
+              setParam(
+                'strokeCount',
+                value == null || value === 'all' ? undefined : value,
+              )
+            }
+          >
+            <SelectTrigger
+              className="ml-auto rounded-full"
+              aria-label="Filter by stroke count"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(strokeItems).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <KanjiResults
+          data={data}
+          isPending={isPending}
+          isError={isError}
+          isPlaceholderData={isPlaceholderData}
+          onRetry={refetch}
+          onPageChange={setPage}
         />
       </div>
-
-      <KanjiResults
-        data={data}
-        isPending={isPending}
-        isError={isError}
-        isPlaceholderData={isPlaceholderData}
-        onRetry={refetch}
-        onPageChange={setPage}
-      />
     </div>
   )
 }
@@ -117,7 +126,7 @@ function KanjiResults({
   onPageChange: (page: number) => void
 }) {
   if (isPending) {
-    return <LoadingState count={9} />
+    return <LoadingState count={12} className="sm:grid-cols-3 lg:grid-cols-4" itemClassName="h-48" />
   }
 
   if (isError || !data) {
@@ -131,7 +140,7 @@ function KanjiResults({
   return (
     <div className="space-y-6">
       <ul
-        className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+        className={`grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 ${
           isPlaceholderData ? 'opacity-60 transition-opacity' : ''
         }`}
       >
@@ -141,11 +150,16 @@ function KanjiResults({
           </li>
         ))}
       </ul>
-      <PaginationControls
-        page={data.pagination.page}
-        totalPages={data.pagination.totalPages}
-        onPageChange={onPageChange}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[12.5px] text-muted-foreground">
+          Showing {data.data.length} of {data.pagination.total} kanji
+        </span>
+        <PaginationControls
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          onPageChange={onPageChange}
+        />
+      </div>
     </div>
   )
 }

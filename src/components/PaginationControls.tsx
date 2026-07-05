@@ -21,18 +21,20 @@ export function PaginationControls({
       <Button
         variant="outline"
         size="sm"
+        className="rounded-[10px]"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
       >
         <ChevronLeft className="size-4" aria-hidden />
         Previous
       </Button>
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-[12.5px] text-muted-foreground tabular-nums" aria-live="polite">
         Page {page} of {totalPages}
       </p>
       <Button
         variant="outline"
         size="sm"
+        className="rounded-[10px]"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
       >

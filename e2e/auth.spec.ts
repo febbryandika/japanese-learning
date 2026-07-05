@@ -18,9 +18,9 @@ test('register → dashboard → logout → login → dashboard', async ({ page 
   await page.getByRole('button', { name: 'Create account' }).click()
 
   await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(page.getByText(`Welcome back, ${name}`)).toBeVisible()
+  // The dashboard greets by name in its heading (Sumi Night design).
   await expect(
-    page.getByRole('heading', { name: 'Dashboard' }),
+    page.getByRole('heading', { name: `Welcome back, ${name}` }),
   ).toBeVisible()
 
   // Log out — protected route should bounce back to login.

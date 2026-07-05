@@ -14,9 +14,10 @@ export default async function GrammarPage() {
     redirect('/login')
   }
 
+  // The browser renders its own sticky topbar (title + search), so the page is
+  // just the shell for it.
   return (
-    <main className="mx-auto w-full max-w-5xl p-6">
-      <h1 className="mb-6 text-2xl font-semibold">Grammar</h1>
+    <main>
       <GrammarBrowser />
     </main>
   )

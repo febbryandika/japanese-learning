@@ -1,13 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Play } from 'lucide-react'
 
 import { useVideoLessons } from '@/hooks/use-videos'
 import { ProgressBadge } from '@/components/ProgressBadge'
 import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
-import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDuration } from '@/lib/utils'
 
@@ -38,24 +37,27 @@ export function GroupLessonsView({
         const duration = formatDuration(lesson.durationSeconds)
         return (
           <li key={lesson.id}>
-            <Link href={`/videos/${groupSlug}/${lesson.id}`} className="block rounded-xl">
-              <Card className="transition-colors hover:border-ring">
-                <CardContent className="flex items-center justify-between gap-4 py-4">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{lesson.title}</p>
-                    {duration ? (
-                      <p className="text-sm text-muted-foreground">{duration}</p>
-                    ) : null}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <ProgressBadge state={lesson.progressState} />
-                    <ChevronRight
-                      className="size-4 text-muted-foreground"
-                      aria-hidden
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+            <Link
+              href={`/videos/${groupSlug}/${lesson.id}`}
+              className="flex items-center gap-4 rounded-2xl border bg-card px-4.5 py-4 transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-primary"
+            >
+              <span className="grid size-[46px] shrink-0 place-items-center rounded-xl bg-secondary">
+                <Play className="size-4 text-primary" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold">
+                  {lesson.title}
+                </span>
+                {duration ? (
+                  <span className="block text-xs text-muted-foreground tabular-nums">
+                    {duration}
+                  </span>
+                ) : null}
+              </span>
+              <span className="flex shrink-0 items-center gap-3">
+                <ProgressBadge state={lesson.progressState} />
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+              </span>
             </Link>
           </li>
         )

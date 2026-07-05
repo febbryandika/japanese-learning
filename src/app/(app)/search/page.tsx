@@ -14,9 +14,9 @@ export default async function SearchPage() {
     redirect('/login')
   }
 
+  // SearchView renders its own sticky topbar (title + JP subtitle).
   return (
-    <main className="mx-auto w-full max-w-5xl p-6">
-      <h1 className="mb-6 text-2xl font-semibold">Search</h1>
+    <main>
       <SearchView />
     </main>
   )

@@ -100,6 +100,7 @@ function BookmarkResults({
   if (data.length === 0) {
     return (
       <EmptyState
+        glyph="保"
         message={
           filter === 'all'
             ? 'No bookmarks yet. Open a kanji, vocabulary, grammar, or video lesson and tap the bookmark icon.'
@@ -119,10 +120,10 @@ function BookmarkResults({
     <div className="space-y-8">
       {groups.map((group) => (
         <section key={group.type} className="space-y-3">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-[15px] font-semibold">
             {FILTER_ITEMS[group.type] ?? group.type}
           </h2>
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className={GROUP_GRID[group.type]}>
             {group.items.map((bookmark) => (
               <li
                 key={`${bookmark.targetType}-${bookmark.targetId}`}
@@ -133,7 +134,7 @@ function BookmarkResults({
                   targetType={bookmark.targetType}
                   targetId={bookmark.targetId}
                   bookmarked
-                  className="absolute top-2 right-2 z-10 bg-background"
+                  className="absolute top-2 right-2 z-10 bg-card"
                 />
               </li>
             ))}
@@ -142,6 +143,15 @@ function BookmarkResults({
       ))}
     </div>
   )
+}
+
+// Per-type layout: tiles for kanji/vocabulary, full-width rows for grammar and
+// video lessons (matching each card's shape).
+const GROUP_GRID: Record<BookmarkTargetType, string> = {
+  kanji: 'grid grid-cols-2 gap-3.5 sm:grid-cols-3',
+  vocabulary: 'grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3',
+  grammar: 'flex flex-col gap-3',
+  video_lesson: 'flex flex-col gap-3',
 }
 
 function BookmarkCard({ bookmark }: { bookmark: BookmarkSummary }) {

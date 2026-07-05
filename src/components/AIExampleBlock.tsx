@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2 } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,9 @@ import {
 } from '@/hooks/use-generate-example'
 import type { GeneratedExample } from '@/services/ai.service'
 
+// Sumi Night AI card: subtle indigo gradient surface with a sparkle header and
+// the model name, sentences with a brand left border. "Generate" appends a new
+// example (rate-limited server-side).
 export function AIExampleBlock({
   targetType,
   targetId,
@@ -36,14 +39,21 @@ export function AIExampleBlock({
     })
   }
 
+  const modelName = examples[0]?.modelName ?? 'gpt-4o-mini'
+
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold">AI example sentences</h2>
+    <section className="rounded-2xl border bg-card p-[22px] dark:bg-[linear-gradient(160deg,oklch(0.24_0.05_285),oklch(0.2_0.04_265))]">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <Sparkles className="size-4 text-primary" aria-hidden />
+        <h2 className="text-[13px] font-semibold text-primary">
+          AI example sentences
+        </h2>
+        <span className="ml-auto text-[11px] text-muted-foreground">{modelName}</span>
         <Button
           type="button"
           variant="outline"
           size="sm"
+          className="rounded-[10px]"
           onClick={handleGenerate}
           disabled={generate.isPending}
         >
@@ -52,6 +62,8 @@ export function AIExampleBlock({
               <Loader2 className="size-4 animate-spin" aria-hidden />
               Generating…
             </>
+          ) : examples.length > 0 ? (
+            'Regenerate'
           ) : (
             'Generate'
           )}
@@ -59,20 +71,18 @@ export function AIExampleBlock({
       </div>
 
       {examples.length > 0 ? (
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {examples.map((example) => (
-            <li key={example.id} className="space-y-1 rounded-lg border p-4">
-              <p className="text-base" lang="ja">
+            <li key={example.id} className="border-l-2 border-primary pl-3.5">
+              <p className="jp text-[17px] leading-relaxed" lang="ja">
                 {example.sentenceJa}
               </p>
               {example.sentenceReading ? (
-                <p className="text-sm text-muted-foreground" lang="ja">
+                <p className="jps mt-0.5 text-[12.5px] text-muted-foreground" lang="ja">
                   {example.sentenceReading}
                 </p>
               ) : null}
-              <p className="text-sm text-muted-foreground">
-                {example.sentenceTranslationEn}
-              </p>
+              <p className="mt-1 text-[13px]">{example.sentenceTranslationEn}</p>
             </li>
           ))}
         </ul>

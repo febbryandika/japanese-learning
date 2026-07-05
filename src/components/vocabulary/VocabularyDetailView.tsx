@@ -7,9 +7,9 @@ import { useUpdateProgress } from '@/hooks/use-progress'
 import { AIExampleBlock } from '@/components/AIExampleBlock'
 import { BookmarkButton } from '@/components/BookmarkButton'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { ProgressSelector } from '@/components/ProgressSelector'
+import { MasterySegments } from '@/components/MasterySegments'
+import { ProgressBadge } from '@/components/ProgressBadge'
 import { ErrorState } from '@/components/ErrorState'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   STUDY_PROGRESS_STATES,
@@ -42,7 +42,7 @@ export function VocabularyDetailView({ id }: { id: string }) {
     Boolean(vocab.exampleSentenceTranslation)
 
   return (
-    <article className="space-y-8">
+    <article className="space-y-6">
       <Breadcrumbs
         items={[
           { label: 'Vocabulary', href: '/vocabulary' },
@@ -50,96 +50,117 @@ export function VocabularyDetailView({ id }: { id: string }) {
         ]}
       />
 
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{vocab.jlptLevel}</Badge>
-          {label ? (
-            <span className="text-sm text-muted-foreground">{label}</span>
-          ) : null}
-          <div className="ml-auto flex items-center gap-2">
-            <ProgressSelector
-              value={vocab.progressState}
-              options={STUDY_PROGRESS_STATES}
-              disabled={updateProgress.isPending}
-              onChange={(progressState) =>
-                updateProgress.mutate(
-                  {
-                    targetType: 'vocabulary',
-                    targetId: vocab.id,
-                    progressState,
-                  },
-                  {
-                    onError: () =>
-                      toast.error(
-                        'Could not update progress. Please try again.',
-                      ),
-                  },
-                )
-              }
-            />
-            <BookmarkButton targetType="vocabulary" targetId={vocab.id} />
+      <div className="grid items-start gap-7 lg:grid-cols-[340px_1fr]">
+        {/* Word panel — sticky on desktop */}
+        <div className="rounded-2xl border bg-card p-7 text-center lg:sticky lg:top-6">
+          <div className="kchar text-6xl leading-tight sm:text-7xl" lang="ja">
+            {vocab.word}
+          </div>
+          <div className="jp mt-3 text-lg text-primary" lang="ja">
+            {vocab.reading}
+          </div>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <span className="rounded-lg bg-secondary px-2.5 py-1.5 text-[11.5px] leading-none font-semibold">
+              {vocab.jlptLevel}
+            </span>
+            {label ? (
+              <span className="rounded-lg bg-secondary px-2.5 py-1.5 text-[11.5px] leading-none font-semibold">
+                {label}
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-5 flex justify-center">
+            <ProgressBadge state={vocab.progressState} />
           </div>
         </div>
-        <h1 className="text-4xl leading-none font-semibold" lang="ja">
-          {vocab.word}
-        </h1>
-        <p className="text-lg text-muted-foreground" lang="ja">
-          {vocab.reading}
-        </p>
-        <p className="text-lg font-medium">{vocab.meaning}</p>
-      </header>
 
-      {vocab.notes ? (
-        <section className="space-y-2">
-          <h2 className="text-lg font-semibold">Notes</h2>
-          <p className="text-sm whitespace-pre-line text-muted-foreground">
-            {vocab.notes}
-          </p>
-        </section>
-      ) : null}
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Example sentence</h2>
-        {hasExample ? (
-          <div className="space-y-1 rounded-lg border p-4">
-            {vocab.exampleSentenceOriginal ? (
-              <p className="text-base" lang="ja">
-                {vocab.exampleSentenceOriginal}
+        {/* Info column */}
+        <div className="flex flex-col gap-6">
+          <header>
+            <h1 className="text-3xl font-bold tracking-tight">{vocab.meaning}</h1>
+            {vocab.notes ? (
+              <p className="mt-3 text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                {vocab.notes}
               </p>
             ) : null}
-            {vocab.exampleSentenceTranslation ? (
-              <p className="text-sm text-muted-foreground">
-                {vocab.exampleSentenceTranslation}
-              </p>
-            ) : null}
+          </header>
+
+          <div>
+            <div className="mb-2.5 text-xs font-semibold text-muted-foreground">
+              Mastery
+            </div>
+            <div className="flex flex-wrap items-center gap-3.5">
+              <MasterySegments
+                value={vocab.progressState}
+                options={STUDY_PROGRESS_STATES}
+                disabled={updateProgress.isPending}
+                onChange={(progressState) =>
+                  updateProgress.mutate(
+                    {
+                      targetType: 'vocabulary',
+                      targetId: vocab.id,
+                      progressState,
+                    },
+                    {
+                      onError: () =>
+                        toast.error('Could not update progress. Please try again.'),
+                    },
+                  )
+                }
+              />
+              <BookmarkButton
+                targetType="vocabulary"
+                targetId={vocab.id}
+                showLabel
+              />
+            </div>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No example sentence available.
-          </p>
-        )}
-      </section>
 
-      <AIExampleBlock
-        targetType="vocabulary"
-        targetId={vocab.id}
-        examples={vocab.generatedExamples}
-      />
+          <section className="rounded-2xl border bg-card p-[22px]">
+            <h2 className="mb-3.5 text-sm font-semibold">Example sentence</h2>
+            {hasExample ? (
+              <div className="border-l-2 border-primary pl-3.5">
+                {vocab.exampleSentenceOriginal ? (
+                  <p className="jp text-[17px] leading-relaxed" lang="ja">
+                    {vocab.exampleSentenceOriginal}
+                  </p>
+                ) : null}
+                {vocab.exampleSentenceTranslation ? (
+                  <p className="mt-1 text-[13px] text-muted-foreground">
+                    {vocab.exampleSentenceTranslation}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No example sentence available.
+              </p>
+            )}
+          </section>
+
+          <AIExampleBlock
+            targetType="vocabulary"
+            targetId={vocab.id}
+            examples={vocab.generatedExamples}
+          />
+        </div>
+      </div>
     </article>
   )
 }
 
 function DetailSkeleton() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <Skeleton className="h-5 w-32" />
-      <div className="space-y-3">
-        <Skeleton className="h-5 w-24" />
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-5 w-full max-w-sm" />
+      <div className="grid items-start gap-7 lg:grid-cols-[340px_1fr]">
+        <Skeleton className="h-64 w-full rounded-2xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-12 w-full max-w-sm" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+        </div>
       </div>
-      <Skeleton className="h-24 w-full rounded-lg" />
     </div>
   )
 }

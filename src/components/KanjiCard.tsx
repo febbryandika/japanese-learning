@@ -1,52 +1,34 @@
 import Link from 'next/link'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { ProgressBadge } from '@/components/ProgressBadge'
 import type { KanjiListItem } from '@/hooks/use-kanji'
 
+// Sumi Night kanji tile: centered gradient glyph, meaning, readings + stroke
+// count, mastery pill. Hover lifts the tile with a brand border.
 export function KanjiCard({ kanji }: { kanji: KanjiListItem }) {
+  const readings = [kanji.onyomi, kanji.kunyomi].filter(Boolean).join('・')
+
   return (
-    <Link href={`/kanji/${kanji.id}`} className="block rounded-xl">
-      <Card className="h-full transition-colors hover:border-ring">
-        <CardContent className="flex gap-4 py-4">
-          <span className="text-4xl leading-none" lang="ja">
-            {kanji.character}
-          </span>
-          <div className="min-w-0 flex-1 space-y-1">
-            <p className="line-clamp-2 text-sm font-medium">{kanji.meaning}</p>
-            <dl className="space-y-0.5 text-xs text-muted-foreground">
-              {kanji.onyomi ? (
-                <div className="flex gap-1">
-                  <dt className="shrink-0">On</dt>
-                  <dd className="truncate" lang="ja">
-                    {kanji.onyomi}
-                  </dd>
-                </div>
-              ) : null}
-              {kanji.kunyomi ? (
-                <div className="flex gap-1">
-                  <dt className="shrink-0">Kun</dt>
-                  <dd className="truncate" lang="ja">
-                    {kanji.kunyomi}
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <Badge variant="secondary">{kanji.jlptLevel}</Badge>
-              <span className="text-xs text-muted-foreground">
-                {kanji.strokeCount != null
-                  ? `${kanji.strokeCount} strokes`
-                  : '— strokes'}
-              </span>
-              {kanji.progressState ? (
-                <ProgressBadge state={kanji.progressState} />
-              ) : null}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <Link
+      href={`/kanji/${kanji.id}`}
+      className="block h-full rounded-2xl border bg-card p-[18px] text-center transition-[border-color,transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_10px_30px_-14px_var(--ring)]"
+    >
+      <span className="kchar text-6xl" lang="ja">
+        {kanji.character}
+      </span>
+      <p className="mt-3 line-clamp-2 text-[13.5px] font-semibold">{kanji.meaning}</p>
+      <p className="jp mt-1 truncate text-[11.5px] text-muted-foreground" lang="ja">
+        {readings || '—'}
+        {kanji.strokeCount != null ? (
+          <>
+            <span className="opacity-50"> · </span>
+            {kanji.strokeCount}画
+          </>
+        ) : null}
+      </p>
+      <div className="mt-2.5 flex justify-center">
+        {kanji.progressState ? <ProgressBadge state={kanji.progressState} /> : null}
+      </div>
     </Link>
   )
 }
