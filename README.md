@@ -2,6 +2,31 @@
 
 A fullstack Japanese-language learning platform for JLPT N2 preparation. It combines structured video lessons, kanji / vocabulary / grammar study with mastery tracking, timed mock exams, AI-generated example sentences, and an in-browser light-novel reader with tap-to-lookup — all in a single Next.js app.
 
+## Screenshots
+
+*"Sumi Night" — a dark ink-wash theme with serif Japanese display type. A light theme ships too, toggled from the sidebar.*
+
+![Dashboard — progress rings, recent activity, continue learning](docs/screenshots/dashboard.png)
+
+| Kanji browsing | Kanji detail |
+|---|---|
+| ![Kanji list with mastery filters](docs/screenshots/kanji-list.png) | ![Kanji detail with readings, mastery control, compounds](docs/screenshots/kanji-detail.png) |
+
+| Global search | Vocabulary | Mock exams |
+|---|---|---|
+| ![Cross-resource search](docs/screenshots/search.png) | ![Vocabulary list](docs/screenshots/vocabulary-list.png) | ![Mock exam list](docs/screenshots/mock-exams.png) |
+
+<details>
+<summary>More: grammar, videos, mobile</summary>
+
+| Grammar | Videos |
+|---|---|
+| ![Grammar list](docs/screenshots/grammar-list.png) | ![Video lesson groups](docs/screenshots/videos.png) |
+
+<img src="docs/screenshots/mobile-nav.png" alt="Mobile navigation drawer" width="320" />
+
+</details>
+
 ## Features
 
 - **Video lessons** organized into content groups (Google Drive embeds), with progress + bookmarks.
@@ -93,7 +118,7 @@ pnpm db:seed:*      # seed videos / kanji / vocabulary / grammar / mock-exams / 
 - **AI generation** uses `generateObject` with a Zod output schema (structured output), persists to `generated_example_sentences`, and is rate-limited to 10 req/min per user.
 - **Reader lookup** calls `GET /api/lookup?q=...` on text selection and persists reading position per user/book as an epubjs CFI string.
 
-See [docs/DATABASE.md](docs/DATABASE.md) for the schema and [docs/API.md](docs/API.md) for the endpoint reference. Planned directory layout mirrors `src/app` (pages), `src/components`, `src/hooks`, `src/lib`, `src/services`, and `src/store`.
+See [docs/diagrams/architecture.md](docs/diagrams/architecture.md) for system/sequence/ER diagrams, [docs/DATABASE.md](docs/DATABASE.md) for the schema, and [docs/API.md](docs/API.md) for the endpoint reference. Planned directory layout mirrors `src/app` (pages), `src/components`, `src/hooks`, `src/lib`, `src/services`, and `src/store`.
 
 ## Seed data
 
