@@ -22,6 +22,15 @@ export function resourceTitle(p: ProgressSummary): string {
   }
 }
 
+// Short glyph for the square avatar on dashboard rows: kanji show the character
+// itself, words/patterns their first two characters, videos their initial.
+export function resourceGlyph(p: ProgressSummary): string {
+  const title = resourceTitle(p)
+  if (p.targetType === 'kanji') return title
+  if (p.targetType === 'video_lesson') return title.charAt(0).toUpperCase()
+  return title.slice(0, 2)
+}
+
 // The detail-page link for a tracked resource. Video lessons live under their
 // group slug (present on the enriched item, so no extra lookup is needed).
 export function resourceHref(p: ProgressSummary): string {

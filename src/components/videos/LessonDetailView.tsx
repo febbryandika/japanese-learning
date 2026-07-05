@@ -1,13 +1,12 @@
 'use client'
 
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useVideoLesson } from '@/hooks/use-videos'
 import { useUpdateProgress } from '@/hooks/use-progress'
 import { VideoPlayer } from '@/components/VideoPlayer'
 import { BookmarkButton } from '@/components/BookmarkButton'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { ProgressSelector } from '@/components/ProgressSelector'
 import { ErrorState } from '@/components/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -36,23 +35,27 @@ export function LessonDetailView({
 
   return (
     <article className="space-y-6">
-      <Link
-        href={`/videos/${groupSlug}`}
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Back to {lesson.group.title}
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: 'Videos', href: '/videos' },
+          { label: lesson.group.title, href: `/videos/${groupSlug}` },
+          { label: lesson.title },
+        ]}
+      />
 
-      <VideoPlayer embedUrl={lesson.embedUrl} title={lesson.title} />
+      <div className="overflow-hidden rounded-2xl border">
+        <VideoPlayer embedUrl={lesson.embedUrl} title={lesson.title} />
+      </div>
 
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">{lesson.title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{lesson.title}</h1>
         {duration ? (
-          <p className="text-sm text-muted-foreground">{duration}</p>
+          <p className="text-sm text-muted-foreground tabular-nums">{duration}</p>
         ) : null}
         {lesson.description ? (
-          <p className="text-muted-foreground">{lesson.description}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {lesson.description}
+          </p>
         ) : null}
       </header>
 
@@ -78,6 +81,7 @@ export function LessonDetailView({
         <BookmarkButton
           targetType="video_lesson"
           targetId={lesson.id}
+          showLabel
           className="ml-auto"
         />
       </div>

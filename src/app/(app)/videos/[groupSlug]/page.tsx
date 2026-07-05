@@ -1,9 +1,8 @@
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 
 import { getServerSession } from '@/lib/auth'
 import { getPublishedGroupBySlug } from '@/services/video.service'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { GroupLessonsView } from '@/components/videos/GroupLessonsView'
 
 export default async function GroupPage({
@@ -23,15 +22,13 @@ export default async function GroupPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-6">
-      <Link
-        href="/videos"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        All groups
-      </Link>
-      <h1 className="mb-6 text-2xl font-semibold">{group.title}</h1>
+    <main className="mx-auto w-full max-w-4xl space-y-6 px-6 py-6 sm:px-8">
+      <Breadcrumbs
+        items={[{ label: 'Videos', href: '/videos' }, { label: group.title }]}
+      />
+      <h1 className="jp text-2xl font-bold tracking-tight" lang="ja">
+        {group.title}
+      </h1>
       <GroupLessonsView groupId={group.id} groupSlug={group.slug} />
     </main>
   )

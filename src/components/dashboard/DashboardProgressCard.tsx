@@ -1,47 +1,55 @@
 import Link from 'next/link'
 
-import { Card, CardContent } from '@/components/ui/card'
 import type { DashboardProgressStat } from '@/lib/validations'
 
-// A single Progress Summary card: percentage, mastered/total, and a bar.
-// `mastered / total` per task 7. Links to the resource's browse page.
+// A single Progress Summary card, Sumi Night style: a conic-gradient ring with
+// the percentage + Japanese label in the hole, stats beside it. Links to the
+// resource's browse page. `mastered / total` per SPEC §5.2.
 export function DashboardProgressCard({
   label,
+  jpLabel,
+  ringColor,
   stat,
   href,
 }: {
   label: string
+  jpLabel: string
+  ringColor: string
   stat: DashboardProgressStat
   href: string
 }) {
   return (
-    <Link href={href} className="block rounded-xl">
-      <Card className="h-full transition-colors hover:border-ring">
-        <CardContent className="space-y-3 py-4">
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground">{label}</h3>
-            <span className="text-2xl font-semibold tabular-nums">
-              {stat.percentage}%
-            </span>
-          </div>
-          <div
-            className="h-2 overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuenow={stat.percentage}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`${label} mastered`}
-          >
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-[width]"
-              style={{ width: `${stat.percentage}%` }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {stat.mastered} of {stat.total} mastered
-          </p>
-        </CardContent>
-      </Card>
+    <Link
+      href={href}
+      className="flex items-center gap-4 rounded-2xl border bg-card p-5 transition-colors hover:border-primary"
+    >
+      <div
+        role="progressbar"
+        aria-valuenow={stat.percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${label} mastered`}
+        className="grid size-[104px] shrink-0 place-items-center rounded-full"
+        style={{
+          background: `conic-gradient(${ringColor} ${stat.percentage}%, rgb(255 255 255 / 0.08) 0)`,
+          filter: `drop-shadow(0 0 10px ${ringColor})`,
+        }}
+      >
+        <div className="flex size-[76px] flex-col items-center justify-center rounded-full bg-card">
+          <span className="text-[22px] leading-none font-bold tabular-nums">
+            {stat.percentage}%
+          </span>
+          <span className="jps mt-0.5 text-xs text-muted-foreground" lang="ja">
+            {jpLabel}
+          </span>
+        </div>
+      </div>
+      <div className="min-w-0">
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="mt-1 text-[12.5px] text-muted-foreground">
+          {stat.mastered} / {stat.total} mastered
+        </div>
+      </div>
     </Link>
   )
 }

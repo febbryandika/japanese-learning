@@ -11,11 +11,16 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-6 p-6">
+    <main className="mx-auto w-full max-w-6xl space-y-7 px-6 py-8 sm:px-8">
       <header>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="jp text-sm font-medium text-primary" lang="ja">
+          おかえりなさい
+        </p>
+        <h1 className="mt-1.5 text-[32px] leading-tight font-bold tracking-tight">
           Welcome back, {session.user.name}
+        </h1>
+        <p className="mt-2 text-[13.5px] text-muted-foreground">
+          Pick up where you left off, or start something new.
         </p>
       </header>
 

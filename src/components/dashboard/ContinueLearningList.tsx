@@ -10,6 +10,7 @@ import { ProgressBadge } from '@/components/ProgressBadge'
 import type { ProgressSummary } from '@/hooks/use-progress'
 import {
   RESOURCE_TYPE_LABELS,
+  resourceGlyph,
   resourceHref,
   resourceTitle,
 } from './resource-display'
@@ -29,27 +30,36 @@ export function ContinueLearningList({ items }: { items: ProgressSummary[] }) {
           </p>
         ) : (
           <ul className="divide-y divide-border">
-            {items.map((item) => (
-              <li key={`${item.targetType}-${item.targetId}`}>
-                <Link
-                  href={resourceHref(item)}
-                  className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-muted/50"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium" lang="ja">
-                      {resourceTitle(item)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {RESOURCE_TYPE_LABELS[item.targetType]}
-                    </p>
-                  </div>
-                  <ProgressBadge state={item.progressState} />
-                  <span className="shrink-0 text-sm font-medium text-foreground">
-                    Resume
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {items.map((item) => {
+              const glyph = resourceGlyph(item)
+              return (
+                <li key={`${item.targetType}-${item.targetId}`}>
+                  <Link
+                    href={resourceHref(item)}
+                    className="group flex items-center gap-3.5 py-3"
+                  >
+                    <span
+                      className={`jp grid size-[46px] shrink-0 place-items-center rounded-xl border border-transparent bg-secondary transition-colors group-hover:border-primary ${
+                        glyph.length > 1 ? 'text-base' : 'text-2xl'
+                      }`}
+                      lang="ja"
+                      aria-hidden
+                    >
+                      {glyph}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold" lang="ja">
+                        {resourceTitle(item)}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {RESOURCE_TYPE_LABELS[item.targetType]}
+                      </span>
+                    </span>
+                    <ProgressBadge state={item.progressState} className="shrink-0" />
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         )}
       </CardContent>

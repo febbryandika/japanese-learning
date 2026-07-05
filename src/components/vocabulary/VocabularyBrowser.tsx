@@ -9,6 +9,7 @@ import {
   type VocabPartOfSpeech,
 } from '@/lib/validations'
 import { VocabularyCard } from '@/components/VocabularyCard'
+import { PageHeader } from '@/components/PageHeader'
 import { PaginationControls } from '@/components/PaginationControls'
 import { ErrorState } from '@/components/ErrorState'
 import { EmptyState } from '@/components/EmptyState'
@@ -53,57 +54,65 @@ export function VocabularyBrowser() {
     })
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+    <div>
+      <PageHeader title="Vocabulary" jpTitle="語彙">
         <Input
           type="search"
           value={searchInput}
           onChange={(event) => setSearchInput(event.target.value)}
-          placeholder="Search by word, reading, or meaning"
+          placeholder="Search word, reading, meaning…"
           aria-label="Search vocabulary"
-          className="sm:max-w-xs"
+          className="w-56 rounded-full sm:w-64"
         />
-        <Select
-          items={posItems}
-          value={partOfSpeech ?? 'all'}
-          onValueChange={(value) =>
-            setParam(
-              'partOfSpeech',
-              value == null || value === 'all' ? undefined : value,
-            )
-          }
-        >
-          <SelectTrigger className="w-56" aria-label="Filter by part of speech">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(posItems).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <MasteryFilter
-          value={progressState}
-          onChange={(value) => setParam('progressState', value)}
-        />
-        <BookmarkedToggle
-          active={bookmarked}
-          onToggle={(active) =>
-            setParam('bookmarked', active ? 'true' : undefined)
-          }
+      </PageHeader>
+
+      <div className="mx-auto w-full max-w-6xl px-6 py-6 sm:px-8">
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <MasteryFilter
+            value={progressState}
+            onChange={(value) => setParam('progressState', value)}
+          />
+          <BookmarkedToggle
+            active={bookmarked}
+            onToggle={(active) =>
+              setParam('bookmarked', active ? 'true' : undefined)
+            }
+          />
+          <Select
+            items={posItems}
+            value={partOfSpeech ?? 'all'}
+            onValueChange={(value) =>
+              setParam(
+                'partOfSpeech',
+                value == null || value === 'all' ? undefined : value,
+              )
+            }
+          >
+            <SelectTrigger
+              className="ml-auto rounded-full"
+              aria-label="Filter by part of speech"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(posItems).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <VocabularyResults
+          data={data}
+          isPending={isPending}
+          isError={isError}
+          isPlaceholderData={isPlaceholderData}
+          onRetry={refetch}
+          onPageChange={setPage}
         />
       </div>
-
-      <VocabularyResults
-        data={data}
-        isPending={isPending}
-        isError={isError}
-        isPlaceholderData={isPlaceholderData}
-        onRetry={refetch}
-        onPageChange={setPage}
-      />
     </div>
   )
 }
@@ -124,7 +133,7 @@ function VocabularyResults({
   onPageChange: (page: number) => void
 }) {
   if (isPending) {
-    return <LoadingState count={9} />
+    return <LoadingState count={9} itemClassName="h-36" />
   }
 
   if (isError || !data) {
@@ -138,7 +147,7 @@ function VocabularyResults({
   return (
     <div className="space-y-6">
       <ul
-        className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${
+        className={`grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 ${
           isPlaceholderData ? 'opacity-60 transition-opacity' : ''
         }`}
       >
@@ -148,11 +157,16 @@ function VocabularyResults({
           </li>
         ))}
       </ul>
-      <PaginationControls
-        page={data.pagination.page}
-        totalPages={data.pagination.totalPages}
-        onPageChange={onPageChange}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[12.5px] text-muted-foreground">
+          Showing {data.data.length} of {data.pagination.total} words
+        </span>
+        <PaginationControls
+          page={data.pagination.page}
+          totalPages={data.pagination.totalPages}
+          onPageChange={onPageChange}
+        />
+      </div>
     </div>
   )
 }

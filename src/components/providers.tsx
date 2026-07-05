@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ThemeProvider } from 'next-themes'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -24,5 +25,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   )
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return (
+    // Sumi Night (dark) is the default look; the light token set stays available
+    // via the shell's theme toggle. `class` attribute drives the .dark tokens.
+    <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </ThemeProvider>
+  )
 }

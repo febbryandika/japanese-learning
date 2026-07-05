@@ -26,19 +26,25 @@ export function DashboardView() {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <DashboardProgressCard
           label="Kanji"
+          jpLabel="漢字"
+          ringColor="oklch(0.72 0.14 255)"
           stat={data.progress.kanji}
           href="/kanji"
         />
         <DashboardProgressCard
           label="Vocabulary"
+          jpLabel="語彙"
+          ringColor="oklch(0.78 0.14 70)"
           stat={data.progress.vocabulary}
           href="/vocabulary"
         />
         <DashboardProgressCard
           label="Grammar"
+          jpLabel="文法"
+          ringColor="oklch(0.74 0.15 158)"
           stat={data.progress.grammar}
           href="/grammar"
         />

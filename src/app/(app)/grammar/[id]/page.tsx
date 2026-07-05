@@ -16,7 +16,7 @@ export default async function GrammarDetailPage({
   const { id } = await params
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-6">
+    <main className="mx-auto w-full max-w-6xl px-6 py-6 sm:px-8">
       <GrammarDetailView id={id} />
     </main>
   )

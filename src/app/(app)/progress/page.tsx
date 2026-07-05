@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { getServerSession } from '@/lib/auth'
+import { PageHeader } from '@/components/PageHeader'
 import { ProgressBrowser } from '@/components/progress/ProgressBrowser'
 
 export const metadata: Metadata = {
@@ -15,9 +16,11 @@ export default async function ProgressPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl p-6">
-      <h1 className="mb-6 text-2xl font-semibold">Progress</h1>
-      <ProgressBrowser />
+    <main>
+      <PageHeader title="Progress" jpTitle="学習記録" />
+      <div className="mx-auto w-full max-w-5xl px-6 py-6 sm:px-8">
+        <ProgressBrowser />
+      </div>
     </main>
   )
 }

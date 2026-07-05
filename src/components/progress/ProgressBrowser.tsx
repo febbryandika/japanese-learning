@@ -159,13 +159,13 @@ function ProgressResults({
     <div className="space-y-8">
       {groups.map((group) => (
         <section key={group.type} className="space-y-3">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-[15px] font-semibold">
             {TYPE_ITEMS[group.type] ?? group.type}{' '}
             <span className="text-sm font-normal text-muted-foreground">
               ({group.items.length})
             </span>
           </h2>
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className={GROUP_GRID[group.type]}>
             {group.items.map((entry) => (
               <li
                 key={`${entry.targetType}-${entry.targetId}`}
@@ -180,6 +180,15 @@ function ProgressResults({
       ))}
     </div>
   )
+}
+
+// Per-type layout: tiles for kanji/vocabulary, full-width rows for grammar and
+// video lessons (matching each card's shape).
+const GROUP_GRID: Record<BookmarkTargetType, string> = {
+  kanji: 'grid grid-cols-2 gap-3.5 sm:grid-cols-3',
+  vocabulary: 'grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3',
+  grammar: 'flex flex-col gap-3',
+  video_lesson: 'flex flex-col gap-3',
 }
 
 function ProgressCard({ progress }: { progress: ProgressSummary }) {

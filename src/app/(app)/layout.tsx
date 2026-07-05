@@ -17,8 +17,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // Admins get an extra nav entry into the content-management area; resolved
   // server-side so a learner never sees (or flashes) the link.
   const role = await getUserRole(session.user.id)
-  const items =
-    role === 'admin' ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS
+  const items = role === 'admin' ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS
 
-  return <AppShell items={items}>{children}</AppShell>
+  return (
+    <AppShell
+      items={items}
+      user={{ name: session.user.name, role: role ?? 'learner' }}
+    >
+      {children}
+    </AppShell>
+  )
 }
