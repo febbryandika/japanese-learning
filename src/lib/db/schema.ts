@@ -26,6 +26,9 @@ export const userProfiles = pgTable('user_profiles', {
   role: text('role', { enum: ['admin', 'learner'] })
     .notNull()
     .default('learner'),
+  status: text('status', { enum: ['active', 'disabled'] })
+    .notNull()
+    .default('active'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),

@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+import { createUserViaDb, loginViaUi } from './helpers/users'
+
 // Depends on `pnpm db:seed:mock-exams` having run: at least the published
 // "JLPT N2 Mock Exam 1" with multiple-choice questions across sections.
 
@@ -15,14 +17,10 @@ test('start → answer → save on navigate → resume → submit → score → 
   // with on-demand dev compilation per route; the default 30s is too tight.
   test.setTimeout(90_000)
 
-  // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
+  // Provision a fresh user directly in the DB, then log in via the UI.
   const email = `e2e+exam+${Date.now()}@example.com`
-  await page.goto('/register')
-  await page.getByLabel('Name').fill('E2E Exam User')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill('password1234')
-  await page.getByRole('button', { name: 'Create account' }).click()
-  await expect(page).toHaveURL(/\/dashboard$/)
+  await createUserViaDb({ name: 'E2E Exam User', email, password: 'password1234' })
+  await loginViaUi(page, { email, password: 'password1234' })
 
   // List page → open the full mock exam.
   await page.goto('/mock-exams')

@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { betterAuth } from 'better-auth'
+import { APIError } from 'better-auth/api'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 import { eq } from 'drizzle-orm'
@@ -15,6 +16,9 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    // Public self-registration is removed (Phase 16) — accounts are admin-created
+    // only. This blocks POST /api/auth/sign-up/email; login is unaffected.
+    disableSignUp: true,
   },
   databaseHooks: {
     user: {
@@ -25,6 +29,25 @@ export const auth = betterAuth({
             userId: user.id,
             displayName: user.name,
           })
+        },
+      },
+    },
+    session: {
+      create: {
+        // Block session creation for admin-disabled accounts. Throwing here
+        // aborts the sign-in; the login page already toasts `error.message`.
+        before: async (session) => {
+          const [profile] = await db
+            .select({ status: schema.userProfiles.status })
+            .from(schema.userProfiles)
+            .where(eq(schema.userProfiles.userId, session.userId))
+            .limit(1)
+
+          if (profile?.status === 'disabled') {
+            throw new APIError('FORBIDDEN', {
+              message: 'This account has been disabled.',
+            })
+          }
         },
       },
     },

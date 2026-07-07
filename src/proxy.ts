@@ -1,20 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSessionCookie } from 'better-auth/cookies'
 
-const authRoutes = ['/login', '/register']
-
 // Optimistic, cookie-only gate (no DB hit). The real session check still runs
 // server-side in protected pages via getServerSession().
+//
+// The cookie is only evidence enough to keep guests out of protected routes —
+// never to bounce cookie-holders away from /login. A cookie can outlive its
+// session (admin-disabled accounts have their sessions revoked server-side),
+// and redirecting such a browser to /dashboard loops it straight back here.
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
   const hasSessionCookie = Boolean(getSessionCookie(request))
-  const isAuthRoute = authRoutes.includes(pathname)
 
-  if (hasSessionCookie && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  if (!hasSessionCookie && !isAuthRoute) {
+  if (!hasSessionCookie) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -22,5 +19,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/videos/:path*', '/login', '/register'],
+  matcher: ['/dashboard/:path*', '/videos/:path*'],
 }

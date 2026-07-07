@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+import { createUserViaDb, loginViaUi } from './helpers/users'
+
 // Depends on the kanji / vocabulary / grammar / video seed data. Searching a
 // common English substring ("a") reliably matches curated meanings.
 
@@ -23,14 +25,10 @@ test('global search → grouped results → filter by type → open a result', a
   // exceed the default 30s while routes warm up.
   test.setTimeout(60_000)
 
-  // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
+  // Provision a fresh user directly in the DB, then log in via the UI.
   const email = `e2e+search+${Date.now()}@example.com`
-  await page.goto('/register')
-  await page.getByLabel('Name').fill('E2E Search User')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill('password1234')
-  await page.getByRole('button', { name: 'Create account' }).click()
-  await expect(page).toHaveURL(/\/dashboard$/)
+  await createUserViaDb({ name: 'E2E Search User', email, password: 'password1234' })
+  await loginViaUi(page, { email, password: 'password1234' })
 
   await page.goto('/search')
   await expect(page.getByRole('heading', { name: 'Search' })).toBeVisible()

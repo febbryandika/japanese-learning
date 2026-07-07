@@ -8,14 +8,7 @@ export const loginSchema = z.object({
   password,
 })
 
-export const registerSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  email: z.email('Enter a valid email address'),
-  password,
-})
-
 export type LoginInput = z.infer<typeof loginSchema>
-export type RegisterInput = z.infer<typeof registerSchema>
 
 // ─── Videos ─────────────────────────────────────────────────────────────────
 
@@ -617,3 +610,64 @@ export const updateBookSchema = z.object({
 
 export type CreateBookInput = z.infer<typeof createBookSchema>
 export type UpdateBookInput = z.infer<typeof updateBookSchema>
+
+// ─── Users (Phase 16) ────────────────────────────────────────────────────────
+// Admin-managed accounts: public self-registration is removed (see auth.ts),
+// so these back the admin user CRUD + reset-password routes.
+
+export const USER_ROLES = ['admin', 'learner'] as const
+
+export type UserRole = (typeof USER_ROLES)[number]
+
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  admin: 'Admin',
+  learner: 'Learner',
+}
+
+export const USER_STATUSES = ['active', 'disabled'] as const
+
+export type UserStatus = (typeof USER_STATUSES)[number]
+
+export const USER_STATUS_LABELS: Record<UserStatus, string> = {
+  active: 'Active',
+  disabled: 'Disabled',
+}
+
+export const USER_SORT_FIELDS = ['name', 'email', 'role', 'status', 'createdAt'] as const
+
+export type UserSortField = (typeof USER_SORT_FIELDS)[number]
+
+export const createUserSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.email(),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  role: z.enum(USER_ROLES).default('learner'),
+})
+
+// PATCH — all-optional, no defaults (project gotcha: .partial() of a defaulted
+// schema resets omitted fields — see the update-schema convention above).
+export const updateUserSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  email: z.email().optional(),
+  role: z.enum(USER_ROLES).optional(),
+  status: z.enum(USER_STATUSES).optional(),
+})
+
+export const resetPasswordSchema = z.discriminatedUnion('mode', [
+  z.object({ mode: z.literal('generate') }),
+  z.object({ mode: z.literal('manual'), password: z.string().min(8) }),
+])
+
+export const adminUsersListQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  sortBy: z.enum(USER_SORT_FIELDS).default('createdAt'),
+  sortDir: z.enum(['asc', 'desc']).default('desc'),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+})
+
+export type CreateUserInput = z.infer<typeof createUserSchema>
+export type CreateUserFormValues = z.input<typeof createUserSchema>
+export type UpdateUserInput = z.infer<typeof updateUserSchema>
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+export type AdminUsersListQuery = z.infer<typeof adminUsersListQuerySchema>

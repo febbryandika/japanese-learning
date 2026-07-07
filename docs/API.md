@@ -13,9 +13,10 @@ List responses share the shape:
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/api/auth/sign-in/email` | Log in |
-| POST | `/api/auth/sign-up/email` | Register (auto-signs-in) |
 | POST | `/api/auth/sign-out` | Log out |
 | GET | `/api/auth/session` | Current session |
+
+Public self-registration is disabled (`emailAndPassword.disableSignUp: true`) — `POST /api/auth/sign-up/email` always rejects. Accounts are created by an admin via `/api/admin/users` (see below). Login for a `disabled` account (`user_profiles.status`) is rejected with `403 { message: "This account has been disabled." }`.
 
 ## Dashboard
 
@@ -88,3 +89,26 @@ Submit body `{ answers: [{ questionId, userAnswer }] }`; the server re-scores fr
 ## Admin (role: admin)
 
 CRUD under `/api/admin/*` for lesson groups, videos, kanji, vocabulary, grammar, mock exams (+ questions), and reader books (epub upload/delete). Each accepts `q` + `page`/`pageSize` on its list route and Zod-validated bodies on create/update.
+
+### Users (Phase 16)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/admin/users` | List — `q`, `sortBy` (`name\|email\|role\|status\|createdAt`), `sortDir`, `page`, `pageSize` |
+| POST | `/api/admin/users` | Create (`name`, `email`, `password`, `role`); 409 on duplicate email |
+| GET | `/api/admin/users/[id]` | Detail |
+| PATCH | `/api/admin/users/[id]` | Update `name`/`email`/`role`/`status`; disabling revokes the user's live sessions |
+| DELETE | `/api/admin/users/[id]` | Hard delete — removes the user's app data (progress, bookmarks, exam attempts, reader progress) then the auth user |
+| POST | `/api/admin/users/[id]/reset-password` | `{ mode: 'generate' }` → returns a one-time password; `{ mode: 'manual', password }` → sets it |
+
+An admin cannot disable, demote, or delete their own account (`400`).
+
+### Bootstrap administrator
+
+There is no public sign-up, so the first admin is created from the CLI:
+
+```bash
+NAME="Admin" EMAIL="admin@example.com" PASSWORD="a-strong-password" pnpm db:create-admin
+```
+
+This runs the same account-creation path as `POST /api/admin/users` (credential account + `user_profiles.role = 'admin'`) and errors clearly if the email is already taken.
