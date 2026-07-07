@@ -1,18 +1,16 @@
 import { test, expect } from '@playwright/test'
 
+import { createUserViaDb, loginViaUi } from './helpers/users'
+
 // Depends on `pnpm db:seed:videos` having run: the 文法 (bunpou) group must
 // exist and contain the "N2文法 入門" lesson.
 test('browse groups → open lesson → mark completed → persists on reload', async ({
   page,
 }) => {
-  // Register a fresh user — Better Auth auto-signs-in, landing on the dashboard.
+  // Provision a fresh user directly in the DB, then log in via the UI.
   const email = `e2e+videos+${Date.now()}@example.com`
-  await page.goto('/register')
-  await page.getByLabel('Name').fill('E2E Video User')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill('password1234')
-  await page.getByRole('button', { name: 'Create account' }).click()
-  await expect(page).toHaveURL(/\/dashboard$/)
+  await createUserViaDb({ name: 'E2E Video User', email, password: 'password1234' })
+  await loginViaUi(page, { email, password: 'password1234' })
 
   // Group list → open the 文法 group.
   await page.goto('/videos')

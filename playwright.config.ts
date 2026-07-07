@@ -23,5 +23,10 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // .env points BETTER_AUTH_URL at the https production deployment, which
+    // makes Better Auth emit __Secure- cookies the browser refuses to store on
+    // http://localhost — every UI login then silently bounces back to /login.
+    // Pin the e2e server to the local origin so cookies stay non-secure.
+    env: { BETTER_AUTH_URL: 'http://localhost:3000' },
   },
 })

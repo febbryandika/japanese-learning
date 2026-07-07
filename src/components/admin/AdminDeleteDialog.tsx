@@ -15,12 +15,14 @@ export function AdminDeleteDialog({
   open,
   onOpenChange,
   resourceLabel,
+  description = 'This action cannot be undone.',
   onConfirm,
   pending = false,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   resourceLabel: string
+  description?: string
   onConfirm: () => void
   pending?: boolean
 }) {
@@ -29,9 +31,7 @@ export function AdminDeleteDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {resourceLabel}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>

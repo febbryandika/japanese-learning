@@ -1,6 +1,7 @@
 import { count } from 'drizzle-orm'
 
 import { db } from '@/lib/db'
+import { user as authUser } from '@/lib/db/auth-schema'
 import {
   epubBooks,
   grammarItems,
@@ -21,10 +22,11 @@ export type AdminCounts = {
   grammar: number
   mockExams: number
   books: number
+  users: number
 }
 
 export async function getAdminCounts(): Promise<AdminCounts> {
-  const [groups, videos, kanji, vocabulary, grammar, exams, books] =
+  const [groups, videos, kanji, vocabulary, grammar, exams, books, users] =
     await Promise.all([
       db.select({ value: count() }).from(lessonGroups),
       db.select({ value: count() }).from(videoLessons),
@@ -33,6 +35,7 @@ export async function getAdminCounts(): Promise<AdminCounts> {
       db.select({ value: count() }).from(grammarItems),
       db.select({ value: count() }).from(mockExams),
       db.select({ value: count() }).from(epubBooks),
+      db.select({ value: count() }).from(authUser),
     ])
 
   return {
@@ -43,5 +46,6 @@ export async function getAdminCounts(): Promise<AdminCounts> {
     grammar: grammar[0].value,
     mockExams: exams[0].value,
     books: books[0].value,
+    users: users[0].value,
   }
 }

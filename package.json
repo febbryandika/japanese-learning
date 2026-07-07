@@ -17,6 +17,7 @@
     "db:seed:grammar": "tsx scripts/seed-grammar.ts",
     "db:seed:mock-exams": "tsx scripts/seed-mock-exams.ts",
     "db:seed:books": "tsx scripts/seed-books.ts",
+    "db:create-admin": "tsx scripts/create-admin.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"

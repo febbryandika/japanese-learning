@@ -17,4 +17,5 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { key: 'grammar', href: '/admin/grammar', label: 'Grammar' },
   { key: 'mockExams', href: '/admin/mock-exams', label: 'Mock Exams' },
   { key: 'books', href: '/admin/books', label: 'Books' },
+  { key: 'users', href: '/admin/users', label: 'Users' },
 ]

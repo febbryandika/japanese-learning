@@ -10,11 +10,12 @@ PostgreSQL (Neon) via Drizzle ORM. Schema source of truth: `src/lib/db/schema.ts
 - **status** (`generated_example_sentences`): `pending | approved | rejected`.
 - **attempt status** (`mock_exam_attempts`): `in_progress | submitted`.
 - **role** (`user_profiles`): `admin | learner`.
+- **status** (`user_profiles`): `active | disabled` (Phase 16). A `disabled` account is rejected at sign-in (`databaseHooks.session.create.before` in `src/lib/auth.ts`).
 
 ## Tables
 
 ### Auth extension
-- **user_profiles** — `userId` (unique, Better Auth user id), `displayName`, `role` (default `learner`), `createdAt`.
+- **user_profiles** — `userId` (unique, Better Auth user id), `displayName`, `role` (default `learner`), `status` (default `active`), `createdAt`.
 
 ### Content
 - **lesson_groups** — `slug` (unique), `title`, `sortOrder`, `isPublished`.
